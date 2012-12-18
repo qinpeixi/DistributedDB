@@ -45,3 +45,7 @@ void CloseRemoteService(SocketHandler *sh);
 void RecvMsg(SocketHandler *sh, char *buf);
 
 void SendMsg(SocketHandler *sh, char *buf);
+
+char *GetClientIP(SocketHandler *sh);
+
+int GetClientPort(SocketHandler *sh);

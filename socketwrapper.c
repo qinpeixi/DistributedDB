@@ -116,3 +116,13 @@ void SendMsg(SocketHandler *sh, char *buf)
         fprintf(stderr, "Send error,%s:%d\n", __FILE__, __LINE__);
     }
 }
+
+char *GetClientIP(SocketHandler *sh)
+{
+    return (char*)inet_ntoa(sh->clientaddr.sin_addr);
+}
+
+int GetClientPort(SocketHandler *sh)
+{
+    return ntohs(sh->clientaddr.sin_port);
+}

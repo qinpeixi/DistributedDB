@@ -18,20 +18,6 @@
 #include "dbProtocol.h"
 #include "socketwrapper.h"
 
-// cannot hold a DataBase instance, to be correct...
-
-void SendAndRev(char *buf)
-{
-    /* connect with server */
-    SocketHandler *sh;
-    sh = CreateSocketHandler(IP_ADDR, PORT);
-    OpenRemoteService(sh);
-    SendMsg(sh, buf);
-    memset(buf, 0, MAXPACKETLEN);
-    RecvMsg(sh, buf); 
-    CloseRemoteService(sh);
-}
-
 DataBase DBCreate(char *dbName)
 {
     DBPacketHeader hd;
@@ -42,17 +28,21 @@ DataBase DBCreate(char *dbName)
     WriteHeader(buf, &hd);
     Append(buf, dbName, strlen(dbName) + 1);
 
-    SendAndRev(buf);
+    /* establish a connection with server */
+    SocketHandler *sh;
+    sh = CreateSocketHandler(IP_ADDR, PORT);
+    OpenRemoteService(sh);
+    SendMsg(sh, buf);
+    RecvMsg(sh, buf); 
 
     DBPacketHeader *phd = GetHeader(buf);
-    if (phd->cmd != OPEN_R)
+    if (phd->cmd == CMDFAIL)
     {
-        fprintf(stderr, "Receive error.\n");
+        fprintf(stderr, "Receive error:%s\n", GetAppend(phd));
         return NULL;
     }
-    debug(buf);
 
-    return (DataBase)GetAppend(phd);
+    return (DataBase)sh;
 }
 
 int DBDelete(DataBase hdb)
@@ -60,34 +50,88 @@ int DBDelete(DataBase hdb)
     DBPacketHeader hd;
     char buf[MAXPACKETLEN];
 
-    debug(buf);
     hd.cmd = CLOSE;
     WriteHeader(buf, &hd);
-    Append(buf, (char *)&hdb, sizeof(hdb));
 
-    SendAndRev(buf);
+    SendMsg((SocketHandler *)hdb, buf);
+    RecvMsg((SocketHandler *)hdb, buf);
 
     DBPacketHeader *phd = GetHeader(buf);
-    if (phd->cmd != CLOSE_R)
+    if (phd->cmd == CMDFAIL)
     {
-        fprintf(stderr, "Close error.\n");
+        fprintf(stderr, "Close error:%s\n", GetAppend(phd));
         return -1;
     }
+
+    CloseRemoteService((SocketHandler *)hdb);
 
     return 0;
 }
 
 int DBSetKeyValue(DataBase hdb, dbKey key, dbValue value)
 {
-return 0;
+    DBPacketHeader hd;
+    char buf[MAXPACKETLEN];
+
+    hd.cmd = SET;
+    hd.key = key;
+    WriteHeader(buf, &hd);
+    Append(buf, value, strlen(value) + 1);
+
+    SendMsg((SocketHandler *)hdb, buf);
+    RecvMsg((SocketHandler *)hdb, buf);
+
+    DBPacketHeader *phd = GetHeader(buf);
+    if (phd->cmd == CMDFAIL)
+    {
+        fprintf(stderr, "Set error:%s\n", GetAppend(phd));
+        return -1;
+    }
+
+    return 0;
 }
 
 dbValue DBGetKeyValue(DataBase hdb, dbKey key)
 {
-return 0;
+    DBPacketHeader hd;
+    char buf[MAXPACKETLEN];
+
+    hd.cmd = GET;
+    hd.key = key;
+    WriteHeader(buf, &hd);
+
+    SendMsg((SocketHandler *)hdb, buf);
+    RecvMsg((SocketHandler *)hdb, buf);
+
+    DBPacketHeader *phd = GetHeader(buf);
+    if (phd->cmd == CMDFAIL)
+    {
+        fprintf(stderr, "Get error:%s\n", GetAppend(phd));
+        return NULL;
+    }
+
+    return (dbValue)GetAppend(phd);
 }
 
 int DBDelKeyValue(DataBase hdb, dbKey key)
 {
-return 0;
+    DBPacketHeader hd;
+    char buf[MAXPACKETLEN];
+
+    hd.cmd = DEL;
+    hd.key = key;
+    WriteHeader(buf, &hd);
+
+    SendMsg((SocketHandler *)hdb, buf);
+    RecvMsg((SocketHandler *)hdb, buf);
+
+    DBPacketHeader *phd = GetHeader(buf);
+    if (phd->cmd == CMDFAIL)
+    {
+        fprintf(stderr, "Delete error:%s\n", GetAppend(phd));
+        return -1;
+    }
+
+    return 0;
 }
+

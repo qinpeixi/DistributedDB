@@ -17,57 +17,100 @@
 #include "socketwrapper.h"
 #include "Database.h"
 
-DataBase hdb;
-
-void Execute(const char *buf, char *repbuf)
+//void Execute(const char *buf, char *repbuf)
+void HandleRequest(SocketHandler *sh)
 {
-    DBPacketHeader *phd = (DBPacketHeader *)buf;
+    char szBuf[MAX_BUF_LEN] = "\0";
+    char szReplyMsg[MAX_BUF_LEN] = "hi\0";
+    DataBase hdb;
+    char *strAppend;
+    int quit = 0;
 
-    switch (phd->cmd)
+    printf("Accept connection from %s:%d\n", GetClientIP(sh), GetClientPort(sh));
+    while (quit == 0)
     {
-        case OPEN:
-            {
-                hdb = DBCreate(GetAppend(phd));
-                DBPacketHeader hd;
-                if (hdb == NULL)
-                    hd.cmd = CMDFAIL;
-                else
-                    hd.cmd = OPEN_R;
-                WriteHeader(repbuf, &hd);
-                break;
-            }
-        case CLOSE:
-            {
-                DBPacketHeader hd;
-                if (DBDelete(hdb) != 0)
-                    hd.cmd = CMDFAIL;
-                else
-                    hd.cmd = CLOSE_R;
-                WriteHeader(repbuf, &hd);
-                break;
-            }
-        default:
-            {
-                fprintf(stderr, "Unknown command.\n");
-            }
+        DBPacketHeader *phd; 
+        DBPacketHeader hd;
+
+        RecvMsg(sh, szBuf);
+        phd = (DBPacketHeader *)szBuf;
+
+        switch (phd->cmd)
+        {
+            case OPEN:
+                {
+                    hdb = DBCreate(GetAppend(phd));
+                    if (hdb == NULL)
+                        hd.cmd = CMDFAIL;
+                    else
+                        hd.cmd = OPEN_R;
+                    break;
+                }
+            case CLOSE:
+                {
+                    if (DBDelete(hdb) != 0)
+                        hd.cmd = CMDFAIL;
+                    else
+                    {
+                        hd.cmd = CLOSE_R;
+                        quit = 1;
+                    }
+                    break;
+                }
+            case SET:
+                {
+                    if (0 != DBSetKeyValue(hdb, hd.key, GetAppend(phd)))
+                        hd.cmd = CMDFAIL;
+                    else
+                        hd.cmd = SET_R;
+                    break;
+                }
+            case GET:
+                {
+                    strAppend = DBGetKeyValue(hdb, hd.key);
+                    if (strAppend == NULL)
+                        hd.cmd = CMDFAIL;
+                    else
+                        hd.cmd = GET_R;
+                    break;
+                }
+            case DEL:
+                {
+                    if (0 != DBDelKeyValue(hdb, hd.key))
+                        hd.cmd = CMDFAIL;
+                    else
+                        hd.cmd = DEL_R;
+                    break;
+                }
+            default:
+                {
+                    fprintf(stderr, "Unknown command.\n");
+                }
+        }
+        
+        WriteHeader(szReplyMsg, &hd);
+        if (hd.cmd == CMDFAIL)
+        {
+            char *err = DBGetLastErrorMsg();
+            Append(szReplyMsg, err, strlen(err) + 1);
+        }
+        else if (hd.cmd == GET_R)
+            Append(szReplyMsg, strAppend, strlen(strAppend) + 1);
+
+        SendMsg(sh, szReplyMsg);
     }
+    printf("Finish connection from %s:%d\n", GetClientIP(sh), GetClientPort(sh));
 }
 
 int main()
 {
-    char szBuf[MAX_BUF_LEN] = "\0";
-    char szReplyMsg[MAX_BUF_LEN] = "hi\0";
     SocketHandler *sh;
     sh = CreateSocketHandler(IP_ADDR, PORT);
     InitializeService(sh);
     while(1)
     {
-        memset(szBuf, 0, MAX_BUF_LEN);
-        memset(szReplyMsg, 0, MAX_BUF_LEN);
         ServiceStart(sh);
-        RecvMsg(sh, szBuf); 
-        Execute(szBuf, szReplyMsg);
-        SendMsg(sh, szReplyMsg); 
+        HandleRequest(sh);
         ServiceStop(sh); 
     }
     ShutdownService(sh);
