@@ -20,6 +20,7 @@
 
 const int MAXVALUELEN = 1024;
 
+void SetLastErrorMsg(const char *);
 DataBase DBCreate(char *dbName)
 {
     TCHDB *hdb;
@@ -33,6 +34,7 @@ DataBase DBCreate(char *dbName)
     {
         ecode = tchdbecode(hdb);
         fprintf(stderr, "open error: %s\n", tchdberrmsg(ecode));
+        SetLastErrorMsg(tchdberrmsg(ecode));
         return NULL;
     }
 
@@ -48,6 +50,7 @@ int DBDelete(DataBase hdb)
     {
         ecode = tchdbecode(hdb);
         fprintf(stderr, "close error: %s\n", tchdberrmsg(ecode));
+        SetLastErrorMsg(tchdberrmsg(ecode));
         return FAILURE;
     }
 
@@ -63,6 +66,7 @@ int DBSetKeyValue(DataBase hdb, dbKey key, dbValue value)
     {
         ecode = tchdbecode(hdb);
         fprintf(stderr, "put error: %s\n", tchdberrmsg(ecode));
+        SetLastErrorMsg(tchdberrmsg(ecode));
 
         return FAILURE;
     }
@@ -86,6 +90,7 @@ dbValue DBGetKeyValue(DataBase hdb, dbKey key)
     {
         ecode = tchdbecode(hdb);
         fprintf(stderr, "get error: %s\n", tchdberrmsg(ecode));
+        SetLastErrorMsg(tchdberrmsg(ecode));
         return NULL;
     }
 }
@@ -98,6 +103,7 @@ int DBDelKeyValue(DataBase hdb, dbKey key)
     {
         ecode = tchdbecode(hdb);
         fprintf(stderr, "delete error: %s\n", tchdberrmsg(ecode));
+        SetLastErrorMsg(tchdberrmsg(ecode));
 
         return FAILURE;
     }
@@ -105,3 +111,12 @@ int DBDelKeyValue(DataBase hdb, dbKey key)
     return SUCCESS;
 }
 
+static char lasterr[1024];
+void SetLastErrorMsg(const char *msg)
+{
+    strncpy(lasterr, msg, 1024);
+}
+char *DBGetLastErrorMsg()
+{
+    return lasterr;
+}

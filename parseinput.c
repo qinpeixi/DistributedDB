@@ -86,8 +86,13 @@ int Parse(char *input)
             }
             key = atoi(match);
             value = DBGetKeyValue(hdb, key);
-            printf("%s\n", value);
-            res = value ? 0 : -1;
+            if (value != NULL)
+            {
+                printf("%s\n", value);
+                res = 0;
+            }
+            else
+                res = -1;
         }
         else if (0 == strcasecmp(match, "del")
                 || 0 == strcasecmp(match, "delete"))

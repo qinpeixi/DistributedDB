@@ -77,6 +77,15 @@ dbValue DBGetKeyValue(DataBase hdb, dbKey key);
  */
 int DBDelKeyValue(DataBase hdb, dbKey key);
 
+/*
+ * Get the last error message
+ * input    : None
+ * output   : None
+ * in/out   : None
+ * return   : The last error message
+ */
+char *DBGetLastErrorMsg();
+
 #ifdef __cplusplus
 }
 #endif
