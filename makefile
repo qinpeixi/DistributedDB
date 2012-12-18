@@ -1,5 +1,5 @@
 all:	client server
-client: dbclient.o dbProtocol.o socketwrapper.o netdbapi.o
+client: dbclient.o dbProtocol.o socketwrapper.o netdbapi.o parseinput.o
 	gcc -o $@ $^ 
 server: dbserver.o dbProtocol.o socketwrapper.o tcDB.o
 	gcc -o $@ $^ -ltokyocabinet

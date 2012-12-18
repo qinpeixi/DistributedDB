@@ -18,7 +18,7 @@
 #define MAXPACKETLEN 1024
 #define APPENDSIZE (MAXPACKETLEN - sizeof(DBPacketHeader))
 enum CMD {SET,   GET,   DEL,   OPEN,   CLOSE,   QUIT,  HELP,
-          SET_R, GET_R, DEL_R, OPEN_R, CLOSE_R, QUIT_R};
+          SET_R, GET_R, DEL_R, OPEN_R, CLOSE_R, QUIT_R, CMDFAIL};
 
 typedef struct 
 {
@@ -33,7 +33,8 @@ DBPacketHeader *GetHeader(char *buf);
 int Append(char *buf, char *data, int len);
 char *GetAppend(DBPacketHeader *phd);
 
-#define debug(buf) printf("%s: %d %d %d %s\n", __FILE__, ((DBPacketHeader *)buf)->size, \
+#define debug(buf) printf("%s:%d %d %d %d %s\n", __FILE__, __LINE__,  \
+        ((DBPacketHeader *)buf)->size, \
         ((DBPacketHeader *)buf)->cmd, ((DBPacketHeader *)buf)->key, \
         GetAppend((DBPacketHeader *)buf));
 

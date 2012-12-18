@@ -12,9 +12,12 @@
 /*************************************************************************/
 
 #include <stdio.h>
+#include <string.h>
 #include "dbProtocol.h"
 #include "socketwrapper.h"
 #include "Database.h"
+
+DataBase hdb;
 
 void Execute(const char *buf, char *repbuf)
 {
@@ -24,15 +27,28 @@ void Execute(const char *buf, char *repbuf)
     {
         case OPEN:
             {
-                DataBase hdb = DBCreate(GetAppend(phd));
+                hdb = DBCreate(GetAppend(phd));
                 DBPacketHeader hd;
-                hd.cmd = OPEN_R;
+                if (hdb == NULL)
+                    hd.cmd = CMDFAIL;
+                else
+                    hd.cmd = OPEN_R;
+                WriteHeader(repbuf, &hd);
+                break;
+            }
+        case CLOSE:
+            {
+                DBPacketHeader hd;
+                if (DBDelete(hdb) != 0)
+                    hd.cmd = CMDFAIL;
+                else
+                    hd.cmd = CLOSE_R;
                 WriteHeader(repbuf, &hd);
                 break;
             }
         default:
             {
-                printf("Unknown command.\n");
+                fprintf(stderr, "Unknown command.\n");
             }
     }
 }
@@ -46,9 +62,10 @@ int main()
     InitializeService(sh);
     while(1)
     {
+        memset(szBuf, 0, MAX_BUF_LEN);
+        memset(szReplyMsg, 0, MAX_BUF_LEN);
         ServiceStart(sh);
         RecvMsg(sh, szBuf); 
-        debug(szBuf);
         Execute(szBuf, szReplyMsg);
         SendMsg(sh, szReplyMsg); 
         ServiceStop(sh); 

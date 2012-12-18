@@ -12,6 +12,7 @@
 /*************************************************************************/
 
 #include <stdio.h>
+#include <string.h>
 #include <tcutil.h>
 #include <tchdb.h>
 #include <limits.h>
@@ -58,7 +59,7 @@ int DBSetKeyValue(DataBase hdb, dbKey key, dbValue value)
     int ecode;
 
     /* store key-value into the database */
-    if (!tchdbput(hdb, &key, sizeof(dbKey), value, sizeof(value)+1)) 
+    if (!tchdbput(hdb, &key, sizeof(dbKey), value, strlen(value)+1)) 
     {
         ecode = tchdbecode(hdb);
         fprintf(stderr, "put error: %s\n", tchdberrmsg(ecode));
