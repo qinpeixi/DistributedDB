@@ -31,7 +31,11 @@ DataBase DBCreate(char *dbName)
     /* establish a connection with server */
     SocketHandler *sh;
     sh = CreateSocketHandler(IP_ADDR, PORT);
-    OpenRemoteService(sh);
+    if (-1 == OpenRemoteService(sh))
+    {
+        fprintf(stderr, "Open remote service failed.\n");
+        return NULL;
+    }
     SendMsg(sh, buf);
     RecvMsg(sh, buf); 
 

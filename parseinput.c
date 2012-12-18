@@ -65,9 +65,9 @@ int Parse(char *input)
             extern char *DBName;
             if (hdb != NULL)
             {
-                DBDelete(hdb);
-                hdb = NULL;
-                DBName[0] = '\0';
+                fprintf(stderr, "Please close current database first.\n");
+                res = -1;
+                goto END;
             }
             GetMatch("\\b\\w+\\.\\w+\\b", s, match);
             strncpy(DBName, match, MAX_INPUT_LEN);

@@ -22,7 +22,7 @@ void HandleRequest(SocketHandler *sh)
 {
     char szBuf[MAX_BUF_LEN] = "\0";
     char szReplyMsg[MAX_BUF_LEN] = "hi\0";
-    DataBase hdb;
+    DataBase hdb = NULL;
     char *strAppend;
     int quit = 0;
 
