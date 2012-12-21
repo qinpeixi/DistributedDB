@@ -1,2 +1,2 @@
-xmdb
+DistributedDB
 ====
