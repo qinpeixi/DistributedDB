@@ -3,12 +3,12 @@
 /*                                                                       */
 /*  File Name              :  dbProtocol.c                               */
 /*  Pricipal Author        :  qinpxi                                     */
-/*  Subsystem Name         :                                             */
-/*  Module Name            :                                             */
-/*  Language               :                                             */
-/*  Target Environment     :                                             */
+/*  Subsystem Name         :  DistributedDB                              */
+/*  Module Name            :  Protocol                                   */
+/*  Language               :  C                                          */
+/*  Target Environment     :  Any                                        */
 /*  Created Time           :  Sat 15 Dec 2012 10:38:48 AM CST            */
-/*  Description            :                                             */
+/*  Description            :  Implement the protocol.                    */
 /*************************************************************************/
 
 #include <stdio.h>

@@ -3,10 +3,10 @@
 /*                                                                       */
 /*  File Name              :  netdbapi.c                                 */
 /*  Pricipal Author        :  qinpxi                                     */
-/*  Subsystem Name         :                                             */
-/*  Module Name            :                                             */
-/*  Language               :                                             */
-/*  Target Environment     :                                             */
+/*  Subsystem Name         :  DistributedDB                              */
+/*  Module Name            :  Netdbapi                                   */
+/*  Language               :  C                                          */
+/*  Target Environment     :  Any                                        */
 /*  Created Time           :  Sat 15 Dec 2012 08:51:58 AM CST            */
 /*  Description            :  Implementation of Database.h.              */
 /*                         :  Connet to server using socketwrapper.h.    */ 
@@ -27,6 +27,7 @@ DataBase DBCreate(char *dbName)
     hd.cmd = OPEN;
     WriteHeader(buf, &hd);
     Append(buf, dbName, strlen(dbName) + 1);
+    debug(buf);
 
     /* establish a connection with server */
     SocketHandler *sh;
@@ -36,7 +37,7 @@ DataBase DBCreate(char *dbName)
         fprintf(stderr, "Open remote service failed.\n");
         return NULL;
     }
-    SendMsg(sh, buf);
+    SendMsg(sh, buf, ((DBPacketHeader *)buf)->size);
     RecvMsg(sh, buf); 
 
     DBPacketHeader *phd = GetHeader(buf);
@@ -57,7 +58,7 @@ int DBDelete(DataBase hdb)
     hd.cmd = CLOSE;
     WriteHeader(buf, &hd);
 
-    SendMsg((SocketHandler *)hdb, buf);
+    SendMsg((SocketHandler *)hdb, buf, ((DBPacketHeader *)buf)->size);
     RecvMsg((SocketHandler *)hdb, buf);
 
     DBPacketHeader *phd = GetHeader(buf);
@@ -82,7 +83,7 @@ int DBSetKeyValue(DataBase hdb, dbKey key, dbValue value)
     WriteHeader(buf, &hd);
     Append(buf, value, strlen(value) + 1);
 
-    SendMsg((SocketHandler *)hdb, buf);
+    SendMsg((SocketHandler *)hdb, buf, ((DBPacketHeader *)buf)->size);
     RecvMsg((SocketHandler *)hdb, buf);
 
     DBPacketHeader *phd = GetHeader(buf);
@@ -104,7 +105,7 @@ dbValue DBGetKeyValue(DataBase hdb, dbKey key)
     hd.key = key;
     WriteHeader(buf, &hd);
 
-    SendMsg((SocketHandler *)hdb, buf);
+    SendMsg((SocketHandler *)hdb, buf, ((DBPacketHeader *)buf)->size);
     RecvMsg((SocketHandler *)hdb, buf);
 
     DBPacketHeader *phd = GetHeader(buf);
@@ -126,7 +127,7 @@ int DBDelKeyValue(DataBase hdb, dbKey key)
     hd.key = key;
     WriteHeader(buf, &hd);
 
-    SendMsg((SocketHandler *)hdb, buf);
+    SendMsg((SocketHandler *)hdb, buf, ((DBPacketHeader *)buf)->size);
     RecvMsg((SocketHandler *)hdb, buf);
 
     DBPacketHeader *phd = GetHeader(buf);

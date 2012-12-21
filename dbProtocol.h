@@ -3,17 +3,29 @@
 /*                                                                       */
 /*  File Name              :  dbProtocol.h                               */
 /*  Pricipal Author        :  qinpxi                                     */
-/*  Subsystem Name         :                                             */
-/*  Module Name            :                                             */
-/*  Language               :                                             */
-/*  Target Environment     :                                             */
+/*  Subsystem Name         :  DistributedDB                              */
+/*  Module Name            :  Protocol                                   */
+/*  Language               :  C                                          */
+/*  Target Environment     :  Any                                        */
 /*  Created Time           :  Sat 15 Dec 2012 09:10:29 AM CST            */
-/*  Description            :                                             */
+/*  Description            :  Protocol apis.                             */
 /*************************************************************************/
 
 #ifndef DBPROTOCOL_H
 #define DBPROTOCOL_H
-#include<stdio.h>
+
+/*
+ * Data format
+ * 0------------------------------------31
+ * |   the total size of this packet    |
+ * --------------------------------------
+ * |           the command              |
+ * --------------------------------------
+ * |           the key                  |
+ * --------------------------------------
+ * |                                    |
+ * /   appended content(
+ */
 
 #define MAXPACKETLEN 1024
 #define APPENDSIZE (MAXPACKETLEN - sizeof(DBPacketHeader))

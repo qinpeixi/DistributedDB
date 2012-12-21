@@ -2,13 +2,13 @@
 /* Copyright (C) Network Programming -USTC, 2012                         */
 /*                                                                       */
 /*  File Name              :  dbclient.c                                 */
-/*  Pricipal Author        :  qinpxi                                     */
-/*  Subsystem Name         :                                             */
-/*  Module Name            :                                             */
-/*  Language               :                                             */
-/*  Target Environment     :                                             */
+/*  Pricipal Author        :  Qinpxi                                     */
+/*  Subsystem Name         :  DistributedDB                              */
+/*  Module Name            :  Client                                     */
+/*  Language               :  C                                          */
+/*  Target Environment     :  Any                                        */
 /*  Created Time           :  Sun 16 Dec 2012 09:31:50 AM CST            */
-/*  Description            :                                             */
+/*  Description            :  Client of DistributedDB                    */
 /*************************************************************************/
 
 #include <stdio.h>

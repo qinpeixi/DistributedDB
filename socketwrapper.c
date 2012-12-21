@@ -3,12 +3,12 @@
 /*                                                                       */
 /*  File Name              :  socketwrapper.c                            */
 /*  Pricipal Author        :  qinpxi                                     */
-/*  Subsystem Name         :                                             */
-/*  Module Name            :                                             */
-/*  Language               :                                             */
-/*  Target Environment     :                                             */
+/*  Subsystem Name         :  DistributedDB                              */
+/*  Module Name            :  Socketwrapper                              */
+/*  Language               :  C                                          */
+/*  Target Environment     :  Any                                        */
 /*  Created Time           :  Sat 15 Dec 2012 02:43:54 PM CST            */
-/*  Description            :                                             */
+/*  Description            :  Encapsulation of socket api                */
 /*************************************************************************/
 
 #include <stdio.h>
@@ -107,10 +107,10 @@ void RecvMsg(SocketHandler *sh, char *buf)
     }
 }
 
-void SendMsg(SocketHandler *sh, char *buf)
+void SendMsg(SocketHandler *sh, char *buf, int size)
 {
     assert(sh && sh->newfd != -1);
-    int ret = send(sh->newfd, buf, MAX_BUF_LEN, 0);
+    int ret = send(sh->newfd, buf, size, 0);
     if (ret < 0)
     {
         fprintf(stderr, "Send error,%s:%d\n", __FILE__, __LINE__);

@@ -3,12 +3,12 @@
 /*                                                                       */
 /*  File Name              :  dbserver.c                                 */
 /*  Pricipal Author        :  qinpxi                                     */
-/*  Subsystem Name         :                                             */
-/*  Module Name            :                                             */
-/*  Language               :                                             */
-/*  Target Environment     :                                             */
+/*  Subsystem Name         :  DistributedDB                              */
+/*  Module Name            :  Server                                     */
+/*  Language               :  C                                          */
+/*  Target Environment     :  Any                                        */
 /*  Created Time           :  Sat 15 Dec 2012 10:05:50 AM CST            */
-/*  Description            :                                             */
+/*  Description            :  Server of DistributedDB                    */
 /*************************************************************************/
 
 #include <stdio.h>
@@ -24,16 +24,16 @@ void HandleRequest(SocketHandler *sh)
     char szReplyMsg[MAX_BUF_LEN] = "hi\0";
     DataBase hdb = NULL;
     char *strAppend;
-    int quit = 0;
 
     printf("Accept connection from %s:%d\n", GetClientIP(sh), GetClientPort(sh));
-    while (quit == 0)
+    while (1)
     {
         DBPacketHeader *phd; 
         DBPacketHeader hd;
 
         RecvMsg(sh, szBuf);
         phd = (DBPacketHeader *)szBuf;
+        debug(szBuf);
 
         switch (phd->cmd)
         {
@@ -52,8 +52,8 @@ void HandleRequest(SocketHandler *sh)
                         hd.cmd = CMDFAIL;
                     else
                     {
-                        hd.cmd = CLOSE_R;
-                        quit = 1;
+                        printf("Finish connection from %s:%d\n", GetClientIP(sh), GetClientPort(sh));
+                        return;
                     }
                     break;
                 }
@@ -97,9 +97,8 @@ void HandleRequest(SocketHandler *sh)
         else if (hd.cmd == GET_R)
             Append(szReplyMsg, strAppend, strlen(strAppend) + 1);
 
-        SendMsg(sh, szReplyMsg);
+        SendMsg(sh, szReplyMsg, ((DBPacketHeader *)szReplyMsg)->size);
     }
-    printf("Finish connection from %s:%d\n", GetClientIP(sh), GetClientPort(sh));
 }
 
 int main()

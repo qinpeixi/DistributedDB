@@ -3,12 +3,12 @@
 /*                                                                       */
 /*  File Name              :  parseinput.c                               */
 /*  Pricipal Author        :  qinpxi                                     */
-/*  Subsystem Name         :                                             */
-/*  Module Name            :                                             */
-/*  Language               :                                             */
-/*  Target Environment     :                                             */
+/*  Subsystem Name         :  DistributedDB                              */
+/*  Module Name            :  Parseinput                                 */
+/*  Language               :  C                                          */
+/*  Target Environment     :  Any                                        */
 /*  Created Time           :  Sun 16 Dec 2012 09:38:40 AM CST            */
-/*  Description            :                                             */
+/*  Description            :  Parse user input then call dbapi           */
 /*************************************************************************/
 
 #include <stdio.h>
