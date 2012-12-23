@@ -16,7 +16,7 @@
 #include <tcutil.h>
 #include <tchdb.h>
 #include <limits.h>
-#include "Database.h"
+#include "../common/Database.h"
 
 const int MAXVALUELEN = 1024;
 

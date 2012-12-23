@@ -1,12 +1,23 @@
-all:	client server
-client: dbclient.o dbProtocol.o socketwrapper.o netdbapi.o parseinput.o
-	gcc -o $@ $^ 
-server: dbserver.o dbProtocol.o socketwrapper.o tcDB.o
-	gcc -o $@ $^ -ltokyocabinet
+
+CXX = gcc
+CXXFLAGS = -O2 -Wall -g
+
+TARGET = ddbclient ddbserver
+TESTTARGETS = testtcDB testProtocol
+CLIENTSRC = $(wildcard ./client/*.c ./common/*.c)
+SERVERSRC = $(wildcard ./server/*.c ./common/*.c)
+CLIENTOBJ = $(CLIENTSRC:.c=.o)
+SERVEROBJ = $(SERVERSRC:.c=.o)
+
+all: $(TARGET)
+ddbclient: $(CLIENTOBJ)
+	$(CXX) -o $@ $^
+ddbserver: $(SERVEROBJ)
+	$(CXX) -o $@ $^ -ltokyocabinet
+
 .c.o:
-	gcc -c -g $<
+	$(CXX) -c $(CXXFLAGS) $< -o $@
+
 clean:
-	rm *.o
-	rm client server
-	rm *.db
-	
+	$(RM) $(CLIENTOBJ) $(SERVEROBJ) $(TARGET)
+	$(RM) *.*db

@@ -15,14 +15,12 @@
 #include <string.h>
 #include "dbProtocol.h"
 
-int WriteHeader(char *buf, DBPacketHeader *header)
+void WriteHeader(char *buf, DBPacketHeader *header)
 {
    DBPacketHeader *hBuf = (DBPacketHeader *)buf;
    hBuf->size = sizeof(DBPacketHeader);
    hBuf->cmd  = header->cmd;
    hBuf->key  = header->key;
-
-   return 0;
 }
 
 DBPacketHeader *GetHeader(char *buf)

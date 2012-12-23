@@ -17,7 +17,7 @@
 #include <regex.h>
 #include <assert.h>
 #include "parseinput.h"
-#include "Database.h"
+#include "../common/Database.h"
 
 DataBase hdb = NULL;
 

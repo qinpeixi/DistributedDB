@@ -29,7 +29,7 @@ int main()
     while (res != 1)
     {
         printf("Nezha::%s>>", DBName);
-        fgets(input, MAX_INPUT_LEN, stdin);
+        input = fgets(input, MAX_INPUT_LEN, stdin);
         len = strlen(input);
         if (len == 0 || input[0] == '\n')
             continue;
@@ -37,5 +37,7 @@ int main()
             input[len-1] = '\0';
         res = Parse(input);
     }
+
+    return 0;
 }
 

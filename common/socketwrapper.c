@@ -12,6 +12,8 @@
 /*************************************************************************/
 
 #include <stdio.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <string.h>
@@ -58,7 +60,7 @@ void ShutdownService(SocketHandler *sh)
 int ServiceStart(SocketHandler *sh)
 {
     assert(sh != NULL);
-    int len = sizeof(struct sockaddr);
+    socklen_t len = sizeof(struct sockaddr);
     sh->newfd = accept(sh->sockfd, \
             (struct sockaddr *)&(sh->clientaddr), &len);
     if (sh->newfd == -1)
@@ -107,10 +109,10 @@ void RecvMsg(SocketHandler *sh, char *buf)
     }
 }
 
-void SendMsg(SocketHandler *sh, char *buf, int size)
+void SendMsg(SocketHandler *sh, char *buf)
 {
     assert(sh && sh->newfd != -1);
-    int ret = send(sh->newfd, buf, size, 0);
+    int ret = send(sh->newfd, buf, MAX_BUF_LEN, 0);
     if (ret < 0)
     {
         fprintf(stderr, "Send error,%s:%d\n", __FILE__, __LINE__);

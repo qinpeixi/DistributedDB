@@ -24,7 +24,10 @@
  * |           the key                  |
  * --------------------------------------
  * |                                    |
- * /   appended content(
+ * /         appended content           /
+ * /  (dbName /  dbValue / Error Msg)   /
+ * |                                    |
+ * --------------------------------------
  */
 
 #define MAXPACKETLEN 1024
@@ -39,15 +42,49 @@ typedef struct
     int key;
 } DBPacketHeader;
 
-int WriteHeader(char *buf, DBPacketHeader *header);
+/*
+ * Write the header content into buf
+ * input	: buf, header
+ * output	: None
+ * in/out	: None
+ * return	: None
+ */
+void WriteHeader(char *buf, DBPacketHeader *header);
+
+/*
+ * Get the header from buf
+ * input	: buf
+ * output	: None
+ * in/out	: None
+ * return	: the header of the packet buf
+ */
 DBPacketHeader *GetHeader(char *buf);
 
+/*
+ * Write append content into buf
+ * input	: buf, data, len
+ * output	: None
+ * in/out	: None
+ * return	: SUCCESS(0)/exit(-1)
+ */
 int Append(char *buf, char *data, int len);
+
+/*
+ * Get the appended content from buf
+ * input	: hdb
+ * output	: None
+ * in/out	: None
+ * return	: SUCCESS(0)/exit(-1)
+ */
 char *GetAppend(DBPacketHeader *phd);
 
+#ifdef debug
 #define debug(buf) printf("%s:%d %d %d %d %s\n", __FILE__, __LINE__,  \
         ((DBPacketHeader *)buf)->size, \
         ((DBPacketHeader *)buf)->cmd, ((DBPacketHeader *)buf)->key, \
         GetAppend((DBPacketHeader *)buf));
+#else
+#define debug(buf)
+#endif //debuf
 
-#endif
+#endif //DBPROTOCOL_H

@@ -13,11 +13,10 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "dbProtocol.h"
-#include "socketwrapper.h"
-#include "Database.h"
+#include "../common/dbProtocol.h"
+#include "../common/socketwrapper.h"
+#include "../common/Database.h"
 
-//void Execute(const char *buf, char *repbuf)
 void HandleRequest(SocketHandler *sh)
 {
     char szBuf[MAX_BUF_LEN] = "\0";
@@ -97,7 +96,7 @@ void HandleRequest(SocketHandler *sh)
         else if (hd.cmd == GET_R)
             Append(szReplyMsg, strAppend, strlen(strAppend) + 1);
 
-        SendMsg(sh, szReplyMsg, ((DBPacketHeader *)szReplyMsg)->size);
+        SendMsg(sh, szReplyMsg);
     }
 }
 

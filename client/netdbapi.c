@@ -14,9 +14,9 @@
 
 #include <stdio.h>
 #include <string.h>
-#include "Database.h"
-#include "dbProtocol.h"
-#include "socketwrapper.h"
+#include "../common/Database.h"
+#include "../common/dbProtocol.h"
+#include "../common/socketwrapper.h"
 
 DataBase DBCreate(char *dbName)
 {
@@ -37,7 +37,8 @@ DataBase DBCreate(char *dbName)
         fprintf(stderr, "Open remote service failed.\n");
         return NULL;
     }
-    SendMsg(sh, buf, ((DBPacketHeader *)buf)->size);
+    /* send server the command */
+    SendMsg(sh, buf);
     RecvMsg(sh, buf); 
 
     DBPacketHeader *phd = GetHeader(buf);
@@ -58,7 +59,7 @@ int DBDelete(DataBase hdb)
     hd.cmd = CLOSE;
     WriteHeader(buf, &hd);
 
-    SendMsg((SocketHandler *)hdb, buf, ((DBPacketHeader *)buf)->size);
+    SendMsg((SocketHandler *)hdb, buf);
     RecvMsg((SocketHandler *)hdb, buf);
 
     DBPacketHeader *phd = GetHeader(buf);
@@ -83,7 +84,7 @@ int DBSetKeyValue(DataBase hdb, dbKey key, dbValue value)
     WriteHeader(buf, &hd);
     Append(buf, value, strlen(value) + 1);
 
-    SendMsg((SocketHandler *)hdb, buf, ((DBPacketHeader *)buf)->size);
+    SendMsg((SocketHandler *)hdb, buf);
     RecvMsg((SocketHandler *)hdb, buf);
 
     DBPacketHeader *phd = GetHeader(buf);
@@ -105,7 +106,7 @@ dbValue DBGetKeyValue(DataBase hdb, dbKey key)
     hd.key = key;
     WriteHeader(buf, &hd);
 
-    SendMsg((SocketHandler *)hdb, buf, ((DBPacketHeader *)buf)->size);
+    SendMsg((SocketHandler *)hdb, buf);
     RecvMsg((SocketHandler *)hdb, buf);
 
     DBPacketHeader *phd = GetHeader(buf);
@@ -127,7 +128,7 @@ int DBDelKeyValue(DataBase hdb, dbKey key)
     hd.key = key;
     WriteHeader(buf, &hd);
 
-    SendMsg((SocketHandler *)hdb, buf, ((DBPacketHeader *)buf)->size);
+    SendMsg((SocketHandler *)hdb, buf);
     RecvMsg((SocketHandler *)hdb, buf);
 
     DBPacketHeader *phd = GetHeader(buf);

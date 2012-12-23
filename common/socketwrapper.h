@@ -44,7 +44,7 @@ void CloseRemoteService(SocketHandler *sh);
 
 void RecvMsg(SocketHandler *sh, char *buf);
 
-void SendMsg(SocketHandler *sh, char *buf, int size);
+void SendMsg(SocketHandler *sh, char *buf);
 
 char *GetClientIP(SocketHandler *sh);
 

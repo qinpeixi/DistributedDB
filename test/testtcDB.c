@@ -1,33 +1,36 @@
 /*************************************************************************/
 /* Copyright (C) Network Programming -USTC, 2012                         */
 /*                                                                       */
-/*  File Name              :  parseinput.h                               */
+/*  File Name              :  testtcDB.c                                 */
 /*  Pricipal Author        :  qinpxi                                     */
 /*  Subsystem Name         :                                             */
 /*  Module Name            :                                             */
 /*  Language               :                                             */
 /*  Target Environment     :                                             */
-/*  Created Time           :  Sun 16 Dec 2012 09:57:04 AM CST            */
+/*  Created Time           :  Sat 22 Dec 2012 08:12:14 AM CST            */
 /*  Description            :                                             */
 /*************************************************************************/
 
-#ifndef PARSEINPUT_H
-#define PARSEINPUT_H
-
 #include <stdio.h>
+#include <assert.h>
+#include "Database.h"
 
-#define MAX_INPUT_LEN 1024
+int main()
+{
+    dbKey key;
+    dbValue setvalue;
+    dbValue getvalue;
+    printf("\n>>>>> Test tcDB.c  <<<<<\n");
+    DataBase hdb = DBCreate("abc.db");
+    key = 100;
+    setvalue = "hello world";
 
-/*
- * parse the input and then call dbapi to execute
- * input        : input
- * output       : none
- * input/output : none
- * return       : if input is quit/exit command, return 1
- *              : if input is incorrect command, return -1
- *              : if success, return 0
- */
-int Parse(char *input);
-
-#endif
-
+    int ret = DBSetKeyValue(hdb, key, setvalue);
+    assert(ret == 0);
+    getvalue = DBGetKeyValue(hdb, key);
+    assert(getvalue != NULL);
+    ret = DBDelKeyValue(hdb, key);
+    assert(ret == 0);
+    printf(">>>>> Test report of tcDB.c :  PASS\n\n");
+    return 0;
+}
