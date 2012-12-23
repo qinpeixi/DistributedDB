@@ -16,7 +16,7 @@
 #include <string.h>
 #include "../common/Database.h"
 #include "../common/dbProtocol.h"
-#include "../common/socketwrapper.h"
+#include "socketwrapper.h"
 
 DataBase DBCreate(char *dbName)
 {

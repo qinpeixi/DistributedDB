@@ -13,7 +13,7 @@
 
 #include <stdio.h>
 #include <assert.h>
-#include "Database.h"
+#include "../common/Database.h"
 
 int main()
 {
@@ -21,7 +21,7 @@ int main()
     dbValue setvalue;
     dbValue getvalue;
     printf("\n>>>>> Test tcDB.c  <<<<<\n");
-    DataBase hdb = DBCreate("abc.db");
+    DataBase hdb = DBCreate(".//test//abc.db");
     key = 100;
     setvalue = "hello world";
 

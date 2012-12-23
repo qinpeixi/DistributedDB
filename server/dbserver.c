@@ -14,23 +14,23 @@
 #include <stdio.h>
 #include <string.h>
 #include "../common/dbProtocol.h"
-#include "../common/socketwrapper.h"
+//#include "../common/socketwrapper.h"
+#include "serversocket.h"
 #include "../common/Database.h"
 
-void HandleRequest(SocketHandler *sh)
+void HandleRequest(ClientSockHandle hcsock)
 {
     char szBuf[MAX_BUF_LEN] = "\0";
     char szReplyMsg[MAX_BUF_LEN] = "hi\0";
     DataBase hdb = NULL;
-    char *strAppend;
+    char *strAppend = NULL;
+    DBPacketHeader *phd; 
+    DBPacketHeader hd;
 
-    printf("Accept connection from %s:%d\n", GetClientIP(sh), GetClientPort(sh));
-    while (1)
+    do
     {
-        DBPacketHeader *phd; 
-        DBPacketHeader hd;
 
-        RecvMsg(sh, szBuf);
+        RecvMsg(hcsock.sock, szBuf);
         phd = (DBPacketHeader *)szBuf;
         debug(szBuf);
 
@@ -50,10 +50,7 @@ void HandleRequest(SocketHandler *sh)
                     if (DBDelete(hdb) != 0)
                         hd.cmd = CMDFAIL;
                     else
-                    {
-                        printf("Finish connection from %s:%d\n", GetClientIP(sh), GetClientPort(sh));
-                        return;
-                    }
+                        hd.cmd = CLOSE_R;
                     break;
                 }
             case SET:
@@ -96,21 +93,24 @@ void HandleRequest(SocketHandler *sh)
         else if (hd.cmd == GET_R)
             Append(szReplyMsg, strAppend, strlen(strAppend) + 1);
 
-        SendMsg(sh, szReplyMsg);
-    }
+        SendMsg(hcsock.sock, szReplyMsg);
+    } while (hd.cmd != CLOSE_R);
+
+    ServiceStop(hcsock); 
 }
 
 int main()
 {
-    SocketHandler *sh;
-    sh = CreateSocketHandler(IP_ADDR, PORT);
-    InitializeService(sh);
+    Socket sockfd;
+    ClientSockHandle hcsock;
+
+    InitializeService(&sockfd, "127.0.0.1");
     while(1)
     {
-        ServiceStart(sh);
-        HandleRequest(sh);
-        ServiceStop(sh); 
+        hcsock = ServiceStart(sockfd);
+        HandleRequest(hcsock);
     }
-    ShutdownService(sh);
+    ShutdownService(sockfd);
+
     return 0;
 }

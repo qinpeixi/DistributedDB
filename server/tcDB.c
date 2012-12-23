@@ -21,6 +21,7 @@
 const int MAXVALUELEN = 1024;
 
 void SetLastErrorMsg(const char *);
+
 DataBase DBCreate(char *dbName)
 {
     TCHDB *hdb;
@@ -33,7 +34,7 @@ DataBase DBCreate(char *dbName)
     if(!tchdbopen(hdb, dbName, HDBOWRITER | HDBOCREAT))
     {
         ecode = tchdbecode(hdb);
-        fprintf(stderr, "open error: %s\n", tchdberrmsg(ecode));
+        fprintf(stderr, "open db error: %s\n", tchdberrmsg(ecode));
         SetLastErrorMsg(tchdberrmsg(ecode));
         return NULL;
     }
@@ -49,7 +50,7 @@ int DBDelete(DataBase hdb)
     if(!tchdbclose(hdb))
     {
         ecode = tchdbecode(hdb);
-        fprintf(stderr, "close error: %s\n", tchdberrmsg(ecode));
+        fprintf(stderr, "close db error: %s\n", tchdberrmsg(ecode));
         SetLastErrorMsg(tchdberrmsg(ecode));
         return FAILURE;
     }
@@ -65,7 +66,7 @@ int DBSetKeyValue(DataBase hdb, dbKey key, dbValue value)
     if (!tchdbput(hdb, &key, sizeof(dbKey), value, strlen(value)+1)) 
     {
         ecode = tchdbecode(hdb);
-        fprintf(stderr, "put error: %s\n", tchdberrmsg(ecode));
+        fprintf(stderr, "put key-value error: %s\n", tchdberrmsg(ecode));
         SetLastErrorMsg(tchdberrmsg(ecode));
 
         return FAILURE;
@@ -89,7 +90,7 @@ dbValue DBGetKeyValue(DataBase hdb, dbKey key)
     else
     {
         ecode = tchdbecode(hdb);
-        fprintf(stderr, "get error: %s\n", tchdberrmsg(ecode));
+        fprintf(stderr, "get value error: %s\n", tchdberrmsg(ecode));
         SetLastErrorMsg(tchdberrmsg(ecode));
         return NULL;
     }
@@ -102,7 +103,7 @@ int DBDelKeyValue(DataBase hdb, dbKey key)
     if (!tchdbout(hdb, &key, sizeof(dbKey)))
     {
         ecode = tchdbecode(hdb);
-        fprintf(stderr, "delete error: %s\n", tchdberrmsg(ecode));
+        fprintf(stderr, "delete key-value error: %s\n", tchdberrmsg(ecode));
         SetLastErrorMsg(tchdberrmsg(ecode));
 
         return FAILURE;
