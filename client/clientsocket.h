@@ -1,36 +1,25 @@
 /*************************************************************************/
 /* Copyright (C) Network Programming -USTC, 2012                         */
 /*                                                                       */
-/*  File Name              :  server/serversocket.h                      */
+/*  File Name              :  client/clientsocket.h                      */
 /*  Pricipal Author        :  qinpxi                                     */
 /*  Subsystem Name         :                                             */
 /*  Module Name            :                                             */
 /*  Language               :                                             */
 /*  Target Environment     :                                             */
-/*  Created Time           :  Sun 23 Dec 2012 03:18:08 PM CST            */
+/*  Created Time           :  Mon 24 Dec 2012 08:47:23 AM CST            */
 /*  Description            :                                             */
 /*************************************************************************/
 
-#ifndef SERVERSOCKET_H 
-#define SERVERSOCKET_H 
+#ifndef CLIENTSOCKET_H
+#define CLIENTSOCKET_H
 
 #include "../common/Socket.h"
 
-#define MAX_CONNECT_QUEUE   5
-#define MAX_STRADDR_LEN     50
+int OpenRemoteService(Socket *sockfd, char *addr);
 
-typedef struct 
-{
-    Socket sock;
-    char addr[MAX_STRADDR_LEN];
-} ClientSockHandle;
-
-int InitializeService(Socket *sockfd, char *addr);
-
-void ShutdownService(Socket sockfd);
-
-ClientSockHandle ServiceStart(Socket sockfd);
-
-void ServiceStop(ClientSockHandle hcsock);
+void CloseRemoteService(Socket sockfd);
 
 #endif
+
+

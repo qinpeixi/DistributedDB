@@ -29,7 +29,6 @@ void HandleRequest(ClientSockHandle hcsock)
 
     do
     {
-
         RecvMsg(hcsock.sock, szBuf);
         phd = (DBPacketHeader *)szBuf;
         debug(szBuf);
@@ -104,11 +103,12 @@ int main()
     Socket sockfd;
     ClientSockHandle hcsock;
 
-    InitializeService(&sockfd, "127.0.0.1");
+    InitializeService(&sockfd, LOCAL_ADDR);
     while(1)
     {
         hcsock = ServiceStart(sockfd);
-        HandleRequest(hcsock);
+        if (hcsock.sock != -1)
+            HandleRequest(hcsock);
     }
     ShutdownService(sockfd);
 
