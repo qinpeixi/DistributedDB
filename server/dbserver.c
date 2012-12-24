@@ -12,69 +12,78 @@
 /*************************************************************************/
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 #include "../common/dbProtocol.h"
-//#include "../common/socketwrapper.h"
-#include "serversocket.h"
 #include "../common/Database.h"
+#include "serversocket.h"
 
-void HandleRequest(ClientSockHandle hcsock)
+pthread_mutex_t mutex;
+
+void HandleRequest(ClientSockHandle *phcsock)
 {
     char szBuf[MAX_BUF_LEN] = "\0";
     char szReplyMsg[MAX_BUF_LEN] = "hi\0";
     DataBase hdb = NULL;
     char *strAppend = NULL;
-    DBPacketHeader *phd; 
-    DBPacketHeader hd;
+    DBPacketHeader *precvhd; 
+    DBPacketHeader sendhd;
+    ClientSockHandle hcsock = *phcsock;
 
     do
     {
         RecvMsg(hcsock.sock, szBuf);
-        phd = (DBPacketHeader *)szBuf;
+        precvhd = (DBPacketHeader *)szBuf;
         debug(szBuf);
 
-        switch (phd->cmd)
+        switch (precvhd->cmd)
         {
             case OPEN:
                 {
-                    hdb = DBCreate(GetAppend(phd));
+                    pthread_mutex_lock(&mutex);
+                    hdb = DBCreate(GetAppend(precvhd));
+                    pthread_mutex_unlock(&mutex);
                     if (hdb == NULL)
-                        hd.cmd = CMDFAIL;
+                        sendhd.cmd = CMDFAIL;
                     else
-                        hd.cmd = OPEN_R;
+                        sendhd.cmd = OPEN_R;
                     break;
                 }
             case CLOSE:
                 {
-                    if (DBDelete(hdb) != 0)
-                        hd.cmd = CMDFAIL;
+                    pthread_mutex_lock(&mutex);
+                    int res = DBDelete(hdb);
+                    pthread_mutex_unlock(&mutex);
+                    if (res != 0)
+                        sendhd.cmd = CMDFAIL;
                     else
-                        hd.cmd = CLOSE_R;
+                        sendhd.cmd = CLOSE_R;
                     break;
                 }
             case SET:
                 {
-                    if (0 != DBSetKeyValue(hdb, hd.key, GetAppend(phd)))
-                        hd.cmd = CMDFAIL;
+                    if (0 != DBSetKeyValue(hdb, precvhd->key, GetAppend(precvhd)))
+                        sendhd.cmd = CMDFAIL;
                     else
-                        hd.cmd = SET_R;
+                        sendhd.cmd = SET_R;
                     break;
                 }
             case GET:
                 {
-                    strAppend = DBGetKeyValue(hdb, hd.key);
+                    strAppend = DBGetKeyValue(hdb, precvhd->key);
                     if (strAppend == NULL)
-                        hd.cmd = CMDFAIL;
+                        sendhd.cmd = CMDFAIL;
                     else
-                        hd.cmd = GET_R;
+                        sendhd.cmd = GET_R;
                     break;
                 }
             case DEL:
                 {
-                    if (0 != DBDelKeyValue(hdb, hd.key))
-                        hd.cmd = CMDFAIL;
+                    if (0 != DBDelKeyValue(hdb, precvhd->key))
+                        sendhd.cmd = CMDFAIL;
                     else
-                        hd.cmd = DEL_R;
+                        sendhd.cmd = DEL_R;
                     break;
                 }
             default:
@@ -83,17 +92,20 @@ void HandleRequest(ClientSockHandle hcsock)
                 }
         }
         
-        WriteHeader(szReplyMsg, &hd);
-        if (hd.cmd == CMDFAIL)
+        WriteHeader(szReplyMsg, &sendhd);
+        if (sendhd.cmd == CMDFAIL)
         {
             char *err = DBGetLastErrorMsg();
             Append(szReplyMsg, err, strlen(err) + 1);
         }
-        else if (hd.cmd == GET_R)
+        else if (sendhd.cmd == GET_R)
+        {
             Append(szReplyMsg, strAppend, strlen(strAppend) + 1);
+            free(strAppend);
+        }
 
         SendMsg(hcsock.sock, szReplyMsg);
-    } while (hd.cmd != CLOSE_R);
+    } while (sendhd.cmd != CLOSE_R);
 
     ServiceStop(hcsock); 
 }
@@ -101,15 +113,26 @@ void HandleRequest(ClientSockHandle hcsock)
 int main()
 {
     Socket sockfd;
-    ClientSockHandle hcsock;
+    ClientSockHandle *phcsock;
+    pthread_t thread_id;
 
-    InitializeService(&sockfd, LOCAL_ADDR);
+    if (-1 == InitializeService(&sockfd, LOCAL_ADDR))
+        return -1;
+    pthread_mutex_init(&mutex, NULL);
+
     while(1)
     {
-        hcsock = ServiceStart(sockfd);
-        if (hcsock.sock != -1)
-            HandleRequest(hcsock);
+        phcsock = malloc(sizeof(ClientSockHandle));
+        *phcsock = ServiceStart(sockfd);
+        if (phcsock->sock == -1)
+            continue;
+        if (0 != pthread_create(&thread_id, NULL, (void*)HandleRequest, (void*)phcsock))
+        {
+            perror("create thread");
+            ServiceStop(*phcsock);
+        }
     }
+    pthread_mutex_destroy(&mutex);
     ShutdownService(sockfd);
 
     return 0;

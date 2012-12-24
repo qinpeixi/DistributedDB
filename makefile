@@ -23,7 +23,7 @@ test:   $(TESTOBJ) ./server/tcDB.o ./common/dbProtocol.o
 	./test/testProtocol
 
 .c.o:
-	$(CXX) -c $(CXXFLAGS) -I ./common $< -o $@
+	$(CXX) -c $(CXXFLAGS) $< -o $@
 
 clean:
 	$(RM) $(CLIENTOBJ) $(SERVEROBJ) $(TARGET)

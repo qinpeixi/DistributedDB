@@ -16,93 +16,125 @@
 #include <tcutil.h>
 #include <tchdb.h>
 #include <limits.h>
+#include <assert.h>
 #include "../common/Database.h"
 
-const int MAXVALUELEN = 1024;
+#define debug(...) ;
+
+typedef struct
+{
+    char *name;
+    TCHDB *hdb;
+    int counter; // should be lock when multi-thread visite
+} OpenedDB;
 
 void SetLastErrorMsg(const char *);
+OpenedDB *GetOpenedDB(char *name);
+OpenedDB *AddOpenedDB(char *name, TCHDB *hdb);
+int DelOpenedDB(OpenedDB *podb);
 
 DataBase DBCreate(char *dbName)
 {
-    TCHDB *hdb;
+    OpenedDB *podb;
     int ecode;
 
-    /* create the database */
-    hdb = tchdbnew();
+    podb = GetOpenedDB(dbName);
 
-    /* open the database */
-    if(!tchdbopen(hdb, dbName, HDBOWRITER | HDBOCREAT))
+    if (podb == NULL)
     {
-        ecode = tchdbecode(hdb);
-        fprintf(stderr, "open db error: %s\n", tchdberrmsg(ecode));
-        SetLastErrorMsg(tchdberrmsg(ecode));
-        return NULL;
+        TCHDB *hdb;
+
+        /* create the database */
+        hdb = tchdbnew();
+
+        /* open the database */
+        if(!tchdbopen(hdb, dbName, HDBOWRITER | HDBOCREAT))
+        {
+            ecode = tchdbecode(hdb);
+            fprintf(stderr, "open db error: %s\n", tchdberrmsg(ecode));
+            SetLastErrorMsg(tchdberrmsg(ecode));
+            return NULL;
+        }
+        debug("open a db:%s\n", dbName);
+
+        podb = AddOpenedDB(dbName, hdb);
     }
 
-    return (DataBase)hdb;
+    return (DataBase)podb;
 }
 
-int DBDelete(DataBase hdb)
+int DBDelete(DataBase db)
 {
+    OpenedDB *podb = (OpenedDB *)db;
     int ecode;
 
+    if (DelOpenedDB(podb) == 0)
+        return SUCCESS;
+
     /* close the database */
-    if(!tchdbclose(hdb))
+    if(!tchdbclose(podb->hdb))
     {
-        ecode = tchdbecode(hdb);
+        ecode = tchdbecode(podb->hdb);
         fprintf(stderr, "close db error: %s\n", tchdberrmsg(ecode));
         SetLastErrorMsg(tchdberrmsg(ecode));
         return FAILURE;
     }
+    debug("close a db:%s\n", podb->name);
 
     return SUCCESS;
 }
 
-int DBSetKeyValue(DataBase hdb, dbKey key, dbValue value)
+int DBSetKeyValue(DataBase db, dbKey key, dbValue value)
 {
+    OpenedDB *podb = (OpenedDB *)db;
     int ecode;
 
+    assert(podb->hdb != NULL);
     /* store key-value into the database */
-    if (!tchdbput(hdb, &key, sizeof(dbKey), value, strlen(value)+1)) 
+    if (!tchdbput(podb->hdb, &key, sizeof(dbKey), value, strlen(value)+1)) 
     {
-        ecode = tchdbecode(hdb);
+        ecode = tchdbecode(podb->hdb);
         fprintf(stderr, "put key-value error: %s\n", tchdberrmsg(ecode));
         SetLastErrorMsg(tchdberrmsg(ecode));
 
         return FAILURE;
     }
+    debug("set %d:%s\n", key, value);
 
     return SUCCESS;
 }
 
-dbValue DBGetKeyValue(DataBase hdb, dbKey key)
+dbValue DBGetKeyValue(DataBase db, dbKey key)
 {
+    OpenedDB *podb = (OpenedDB *)db;
     int ecode;
     dbValue value;
-    int valueLen = MAXVALUELEN;
+    int valueLen = -1;
 
     /* get the value */
-    value = (dbValue)tchdbget(hdb, &key, sizeof(dbKey), &valueLen);
+    value = (dbValue)tchdbget(podb->hdb, &key, sizeof(dbKey), &valueLen);
     if (value)
     {
+        debug("get %d:%s\n", key, value);
         return value;
     }
     else
     {
-        ecode = tchdbecode(hdb);
+        ecode = tchdbecode(podb->hdb);
         fprintf(stderr, "get value error: %s\n", tchdberrmsg(ecode));
         SetLastErrorMsg(tchdberrmsg(ecode));
         return NULL;
     }
 }
 
-int DBDelKeyValue(DataBase hdb, dbKey key)
+int DBDelKeyValue(DataBase db, dbKey key)
 {
+    OpenedDB *podb = (OpenedDB *)db;
     int ecode;
 
-    if (!tchdbout(hdb, &key, sizeof(dbKey)))
+    if (!tchdbout(podb->hdb, &key, sizeof(dbKey)))
     {
-        ecode = tchdbecode(hdb);
+        ecode = tchdbecode(podb->hdb);
         fprintf(stderr, "delete key-value error: %s\n", tchdberrmsg(ecode));
         SetLastErrorMsg(tchdberrmsg(ecode));
 
@@ -120,4 +152,64 @@ void SetLastErrorMsg(const char *msg)
 char *DBGetLastErrorMsg()
 {
     return lasterr;
+}
+
+TCMDB *mdb = NULL;  // The db to save all of the opened db
+
+/* if the db specified by name is not open, return NULL */
+OpenedDB *GetOpenedDB(char *name)
+{
+    if (mdb == NULL)
+    {
+        mdb = tcmdbnew();
+        return NULL;
+    }
+
+    OpenedDB *podb;
+    int valuelen = -1;
+    podb = (OpenedDB *)tcmdbget(mdb, name, strlen(name), &valuelen);
+    if (podb != NULL)
+    {
+        podb->counter ++;
+        tcmdbput(mdb, name, strlen(name), podb, sizeof(OpenedDB));
+        debug("%s's counter is %d\n", podb->name, podb->counter);
+    }
+
+    return podb;
+}
+
+OpenedDB *AddOpenedDB(char *name, TCHDB *hdb)
+{
+    assert(mdb != NULL);
+    OpenedDB *podb = malloc(sizeof(OpenedDB));
+    podb->name = strdup(name);
+    podb->hdb = hdb;
+    podb->counter = 1;
+    tcmdbput(mdb, name, strlen(name), podb, sizeof(OpenedDB));
+
+    return podb;
+}
+
+/*
+ * if db is still used by others, return 0
+ * if no other user use this db, return 1
+ */
+int DelOpenedDB(OpenedDB *podb)
+{
+    int valuelen = -1;
+    podb = (OpenedDB *)tcmdbget(mdb, podb->name, strlen(podb->name), &valuelen);
+    podb->counter --;
+    if (podb->counter == 0)
+    {
+        tcmdbout2(mdb, podb->name);
+        debug("%s's counter is %d\n", podb->name, podb->counter);
+        free(podb->name);
+        return 1;
+    }
+    else
+    {
+        tcmdbput(mdb, podb->name, strlen(podb->name), podb, sizeof(OpenedDB));
+        debug("%s's counter is %d\n", podb->name, podb->counter);
+        return 0;
+    }
 }

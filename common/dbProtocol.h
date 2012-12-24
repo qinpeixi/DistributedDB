@@ -78,7 +78,8 @@ int Append(char *buf, char *data, int len);
  */
 char *GetAppend(DBPacketHeader *phd);
 
-#ifdef debug
+#define Debu
+#ifdef Debug
 #define debug(buf) printf("%s:%d %d %d %d %s\n", __FILE__, __LINE__,  \
         ((DBPacketHeader *)buf)->size, \
         ((DBPacketHeader *)buf)->cmd, ((DBPacketHeader *)buf)->key, \
