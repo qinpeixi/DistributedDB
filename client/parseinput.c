@@ -57,7 +57,7 @@ int Parse(char *input)
             res = -1;
         }
     }
-    else if (0 == Check("^\\s*\\w{3,5}\\s+\\w+(\\.\\w+)?\\s*$", input))
+    else if (0 == Check("^\\s*\\w{3,5}\\s+\\w+(\\.\\w*db)?\\s*$", input))
     {// one parameter commands
         GetMatch("\\b\\w{3,5}\\b", s, match);
         if (0 == strcasecmp(match, "open"))
@@ -69,7 +69,7 @@ int Parse(char *input)
                 res = -1;
                 goto END;
             }
-            GetMatch("\\b\\w+\\.\\w+\\b", s, match);
+            GetMatch("\\b\\w+\\.\\w*db\\b", s, match);
             strncpy(DBName, match, MAX_INPUT_LEN);
             hdb = DBCreate(DBName);
             res = hdb ? 0 : -1;

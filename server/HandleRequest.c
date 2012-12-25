@@ -31,17 +31,18 @@ sem_t MSG_SEM;
 pthread_mutex_t DBMUTEX;
 pthread_t thread_id[THREADS_NUM];
 
-void HandleRequest(int *id);
+void HandleRequest(int id);
 
 void InitThreads()
 {
     int i;
     for (i=0; i<THREADS_NUM; i++)
     {
-        if (0 != pthread_create(&thread_id[i], NULL, (void*)HandleRequest, &i))
+        if (0 != pthread_create(&thread_id[i], NULL, (void*)HandleRequest,(void*)i))
         {
             perror("create thread");
         }
+        //printf("The no.%d thread's id is %u\n", i, (int)thread_id[i]);
     }
 
     pthread_mutex_init(&DBMUTEX, NULL);
@@ -56,7 +57,7 @@ void KillThreads()
     pthread_mutex_destroy(&DBMUTEX);
 }
 
-void HandleRequest(int *id)
+void HandleRequest(int id)
 {
     char szReplyMsg[MAX_BUF_LEN] = "\0";
     DataBase hdb; 
@@ -68,13 +69,13 @@ void HandleRequest(int *id)
 
     while (1)
     {
-        pdebug("Thread %u is waiting.\n", *id);
+        pdebug("Thread %u is waiting.\n", id);
         sem_wait(&MSG_SEM);
         pnode = DeQueue();
         hcsock = pnode->hcsock;
         hdb = pnode->hcsock.app; // will be changed only when 'OPEN'
         precvhd = (DBPacketHeader *)pnode->buf;
-        pdebug("Thread %u received:\n", *id);
+        pdebug("Thread %u received:\n", id);
         debug(szBuf);
 
         switch (precvhd->cmd)
