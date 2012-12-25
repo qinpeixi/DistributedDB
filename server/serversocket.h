@@ -23,6 +23,7 @@ typedef struct
 {
     Socket sock;
     char addr[MAX_STRADDR_LEN];
+    void *app; // to take sth with socket
 } ClientSockHandle;
 
 int InitializeService(Socket *sockfd, char *addr);
@@ -33,4 +34,7 @@ ClientSockHandle ServiceStart(Socket sockfd);
 
 void ServiceStop(ClientSockHandle hcsock);
 
+void SendMsg(ClientSockHandle hcsock, char *buf);
+
+ClientSockHandle *RecvMsg(Socket sockfd, char *buf);
 #endif

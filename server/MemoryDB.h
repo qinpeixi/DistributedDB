@@ -1,23 +1,29 @@
 /*************************************************************************/
 /* Copyright (C) Network Programming -USTC, 2012                         */
 /*                                                                       */
-/*  File Name              :  common/Socket.h                            */
+/*  File Name              :  server/MemoryDB.h                          */
 /*  Pricipal Author        :  qinpxi                                     */
 /*  Subsystem Name         :                                             */
 /*  Module Name            :                                             */
 /*  Language               :                                             */
 /*  Target Environment     :                                             */
-/*  Created Time           :  Mon 24 Dec 2012 08:45:03 AM CST            */
+/*  Created Time           :  Tue 25 Dec 2012 09:15:22 AM CST            */
 /*  Description            :                                             */
 /*************************************************************************/
 
-#ifndef SOCKET_H
-#define SOCKET_H
+#ifndef MEMORYDB_H
+#define MEMORYDB_H
 
-#define PORT                5001
-#define LOCAL_ADDR          "127.0.0.1"
-#define MAX_BUF_LEN         1024
+typedef void *MemDB;
 
-typedef int Socket;
+MemDB MDBCreate();
+
+void MDBClose(MemDB mdb);
+
+void MDBSet(MemDB mdb, void *kbuf, int ksize, void *vbuf, int vsize);
+
+void MDBDel(MemDB mdb, void *kbuf, int ksize);
+
+void *MDBGet(MemDB mdb, void *kbuf, int ksize, int *sp);
 
 #endif

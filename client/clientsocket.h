@@ -20,6 +20,9 @@ int OpenRemoteService(Socket *sockfd, char *addr);
 
 void CloseRemoteService(Socket sockfd);
 
+void SendMsg(Socket sockfd, char *buf);
+
+void RecvMsg(Socket sockfd, char *buf);
 #endif
 
 

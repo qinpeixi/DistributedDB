@@ -1,23 +1,43 @@
 /*************************************************************************/
 /* Copyright (C) Network Programming -USTC, 2012                         */
 /*                                                                       */
-/*  File Name              :  common/Socket.h                            */
+/*  File Name              :  test/testMDB.c                             */
 /*  Pricipal Author        :  qinpxi                                     */
 /*  Subsystem Name         :                                             */
 /*  Module Name            :                                             */
 /*  Language               :                                             */
 /*  Target Environment     :                                             */
-/*  Created Time           :  Mon 24 Dec 2012 08:45:03 AM CST            */
+/*  Created Time           :  Tue 25 Dec 2012 09:19:25 AM CST            */
 /*  Description            :                                             */
 /*************************************************************************/
 
-#ifndef SOCKET_H
-#define SOCKET_H
+#include <stdio.h>
+#include <assert.h>
+#include "../server/MemoryDB.h"
 
-#define PORT                5001
-#define LOCAL_ADDR          "127.0.0.1"
-#define MAX_BUF_LEN         1024
+typedef struct 
+{
+    int sock;
+    char addr[50];
+    void *append;
+} ClientSocket;
 
-typedef int Socket;
+int main()
+{
+    int sock = 1;
+    ClientSocket cs;
 
-#endif
+    printf(">>>>> Test MemoryDB.c <<<<<\n");
+    cs.sock = sock;
+    MemDB mdb = MDBCreate();
+    MDBSet(mdb, &sock, sizeof(int), &cs, sizeof(ClientSocket));
+
+    ClientSocket *pcs;
+    int vsize = -1;
+    pcs = MDBGet(mdb, &sock, sizeof(int), &vsize);
+
+    assert(pcs->sock = sock);
+    printf(">>>>> Test report of MemoryDB.c : PASS\n\n");
+
+    return 0;
+}

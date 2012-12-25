@@ -1,35 +1,42 @@
 
 CXX = gcc
 CXXFLAGS = -O2 -Wall -g
+ECHO = @
 
 TARGET = ddbclient ddbserver
 CLIENTSRC = $(wildcard ./client/*.c ./common/*.c)
 SERVERSRC = $(wildcard ./server/*.c ./common/*.c)
-TESTSRC   = $(wildcard ./test/*.c)
 CLIENTOBJ = $(CLIENTSRC:.c=.o)
 SERVEROBJ = $(SERVERSRC:.c=.o)
-TESTOBJ   = $(TESTSRC:.c=.o)
+
+TESTTARGET = ./test/testtcDB ./test/testProtocol ./test/testMemory
+TESTSRC   = $(wildcard ./test/*.c)
+TESTOBJ   = $(TESTSRC:.c=.o) ./server/tcDB.o ./common/dbProtocol.o ./server/MemoryDB.o
+
+FINDRUBISHFILES = find . -regex '.*\.gch\|.*~\|.*\..*db' -type f
 
 all: $(TARGET)
 ddbclient: $(CLIENTOBJ)
-	$(CXX) -o $@ $^
+	$(ECHO) $(CXX) -o $@ $^
 ddbserver: $(SERVEROBJ)
-	$(CXX) -o $@ $^ -ltokyocabinet
+	$(ECHO) $(CXX) -o $@ $^ -ltokyocabinet
 
-test:   $(TESTOBJ) ./server/tcDB.o ./common/dbProtocol.o
-	$(CXX) -o ./test/testtcDB ./test/testtcDB.o ./server/tcDB.o -ltokyocabinet
-	./test/testtcDB
-	$(CXX) -o ./test/testProtocol ./test/testProtocol.o ./common/dbProtocol.o
-	./test/testProtocol
+test:   $(TESTOBJ) 
+	$(ECHO) $(CXX) -o ./test/testtcDB ./test/testtcDB.o ./server/tcDB.o -ltokyocabinet
+	$(ECHO) ./test/testtcDB
+	$(ECHO) $(CXX) -o ./test/testProtocol ./test/testProtocol.o ./common/dbProtocol.o
+	$(ECHO) ./test/testProtocol
+	$(ECHO) $(CXX) -o ./test/testMemory ./test/testMDB.o ./server/MemoryDB.o -ltokyocabinet
+	$(ECHO) ./test/testMemory
 
 .c.o:
-	$(CXX) -c $(CXXFLAGS) $< -o $@
+	$(ECHO) $(CXX) -c $(CXXFLAGS) $< -o $@
 
 clean:
-	$(RM) $(CLIENTOBJ) $(SERVEROBJ) $(TARGET)
-	$(RM) *.*db
+	@$(RM) $(CLIENTOBJ) $(SERVEROBJ) $(TARGET)
+	@$(FINDRUBISHFILES) | xargs $(RM)
+	@$(RM) *.o
 
 cleantest:
-	$(RM) $(TESTOBJ) ./server/tcDB.o ./common/dbProtocol.o
-	$(RM) ./test/testtcDB ./test/testProtocol
-	$(RM) ./test/*.*db
+	@$(RM) $(TESTOBJ) $(TESTTARGET)
+	@$(RM) *.*db *.gch *~

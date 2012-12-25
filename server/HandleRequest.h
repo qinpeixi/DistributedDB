@@ -1,23 +1,25 @@
 /*************************************************************************/
 /* Copyright (C) Network Programming -USTC, 2012                         */
 /*                                                                       */
-/*  File Name              :  common/Socket.h                            */
+/*  File Name              :  server/HandleRequest.h                     */
 /*  Pricipal Author        :  qinpxi                                     */
 /*  Subsystem Name         :                                             */
 /*  Module Name            :                                             */
 /*  Language               :                                             */
 /*  Target Environment     :                                             */
-/*  Created Time           :  Mon 24 Dec 2012 08:45:03 AM CST            */
+/*  Created Time           :  Tue 25 Dec 2012 11:03:41 AM CST            */
 /*  Description            :                                             */
 /*************************************************************************/
 
-#ifndef SOCKET_H
-#define SOCKET_H
+#ifndef HANDLE_REQUEST_H
+#define HANDLE_REQUESE_H
 
-#define PORT                5001
-#define LOCAL_ADDR          "127.0.0.1"
-#define MAX_BUF_LEN         1024
+#include <pthread.h>
+#include "serversocket.h"
 
-typedef int Socket;
+extern char szBuf[];
+extern pthread_mutex_t mutex;
+
+void HandleRequest(ClientSockHandle *phcsock);
 
 #endif

@@ -15,125 +15,56 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
-#include "../common/dbProtocol.h"
-#include "../common/Database.h"
+#include <sys/epoll.h>
 #include "serversocket.h"
+#include "HandleRequest.h"
 
+char szBuf[MAX_BUF_LEN] = "\0";
 pthread_mutex_t mutex;
-
-void HandleRequest(ClientSockHandle *phcsock)
-{
-    char szBuf[MAX_BUF_LEN] = "\0";
-    char szReplyMsg[MAX_BUF_LEN] = "hi\0";
-    DataBase hdb = NULL;
-    char *strAppend = NULL;
-    DBPacketHeader *precvhd; 
-    DBPacketHeader sendhd;
-    ClientSockHandle hcsock = *phcsock;
-
-    do
-    {
-        RecvMsg(hcsock.sock, szBuf);
-        precvhd = (DBPacketHeader *)szBuf;
-        debug(szBuf);
-
-        switch (precvhd->cmd)
-        {
-            case OPEN:
-                {
-                    pthread_mutex_lock(&mutex);
-                    hdb = DBCreate(GetAppend(precvhd));
-                    pthread_mutex_unlock(&mutex);
-                    if (hdb == NULL)
-                        sendhd.cmd = CMDFAIL;
-                    else
-                        sendhd.cmd = OPEN_R;
-                    break;
-                }
-            case CLOSE:
-                {
-                    pthread_mutex_lock(&mutex);
-                    int res = DBDelete(hdb);
-                    pthread_mutex_unlock(&mutex);
-                    if (res != 0)
-                        sendhd.cmd = CMDFAIL;
-                    else
-                        sendhd.cmd = CLOSE_R;
-                    break;
-                }
-            case SET:
-                {
-                    if (0 != DBSetKeyValue(hdb, precvhd->key, GetAppend(precvhd)))
-                        sendhd.cmd = CMDFAIL;
-                    else
-                        sendhd.cmd = SET_R;
-                    break;
-                }
-            case GET:
-                {
-                    strAppend = DBGetKeyValue(hdb, precvhd->key);
-                    if (strAppend == NULL)
-                        sendhd.cmd = CMDFAIL;
-                    else
-                        sendhd.cmd = GET_R;
-                    break;
-                }
-            case DEL:
-                {
-                    if (0 != DBDelKeyValue(hdb, precvhd->key))
-                        sendhd.cmd = CMDFAIL;
-                    else
-                        sendhd.cmd = DEL_R;
-                    break;
-                }
-            default:
-                {
-                    fprintf(stderr, "Unknown command.\n");
-                }
-        }
-        
-        WriteHeader(szReplyMsg, &sendhd);
-        if (sendhd.cmd == CMDFAIL)
-        {
-            char *err = DBGetLastErrorMsg();
-            Append(szReplyMsg, err, strlen(err) + 1);
-        }
-        else if (sendhd.cmd == GET_R)
-        {
-            Append(szReplyMsg, strAppend, strlen(strAppend) + 1);
-            free(strAppend);
-        }
-
-        SendMsg(hcsock.sock, szReplyMsg);
-    } while (sendhd.cmd != CLOSE_R);
-
-    ServiceStop(hcsock); 
-}
 
 int main()
 {
-    Socket sockfd;
-    ClientSockHandle *phcsock;
+    Socket listensock;
     pthread_t thread_id;
+    int epollid;
+    struct epoll_event event;
 
-    if (-1 == InitializeService(&sockfd, LOCAL_ADDR))
+    if (-1 == InitializeService(&listensock, LOCAL_ADDR))
         return -1;
     pthread_mutex_init(&mutex, NULL);
 
+    epollid = epoll_create(1024);
+    event.data.fd = listensock;
+    event.events = EPOLLIN | EPOLLRDHUP;
+    epoll_ctl(epollid, EPOLL_CTL_ADD, listensock, &event);
+
     while(1)
     {
-        phcsock = malloc(sizeof(ClientSockHandle));
-        *phcsock = ServiceStart(sockfd);
-        if (phcsock->sock == -1)
-            continue;
-        if (0 != pthread_create(&thread_id, NULL, (void*)HandleRequest, (void*)phcsock))
+        epoll_wait(epollid, &event, 1, -1);
+        if (event.data.fd == listensock)
         {
-            perror("create thread");
-            ServiceStop(*phcsock);
+            ClientSockHandle hcsock;
+            hcsock = ServiceStart(listensock);
+            if (hcsock.sock == -1)
+                continue;
+            event.data.fd = hcsock.sock;
+            event.events = EPOLLIN;
+            epoll_ctl(epollid, EPOLL_CTL_ADD, hcsock.sock, &event);
+        }
+        else
+        {
+            ClientSockHandle *phcsock;
+            phcsock = RecvMsg(event.data.fd, szBuf);
+            if (0 != pthread_create(&thread_id, NULL, (void*)HandleRequest, (void*)phcsock))
+            {
+                perror("create thread");
+                ServiceStop(*phcsock);
+            }
         }
     }
+
     pthread_mutex_destroy(&mutex);
-    ShutdownService(sockfd);
+    ShutdownService(listensock);
 
     return 0;
 }

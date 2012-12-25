@@ -18,6 +18,9 @@
 #include <unistd.h>
 #include <assert.h>
 #include "serversocket.h"
+#include "MemoryDB.h"
+
+MemDB MDB;
 
 int InitializeService(Socket *psockfd, char *addr)
 {
@@ -51,11 +54,14 @@ int InitializeService(Socket *psockfd, char *addr)
         return -1;
     }
 
+    MDB = MDBCreate();
+
     return 0;
 }
 
 void ShutdownService(Socket sockfd)
 {
+    MDBClose(MDB);
     close(sockfd);
 }
     
@@ -74,6 +80,9 @@ ClientSockHandle ServiceStart(Socket sockfd)
 
     memcpy(hcsock.addr, inet_ntoa(sa.sin_addr), MAX_STRADDR_LEN);
     printf("Accept connnection from %s\n", hcsock.addr);
+
+    MDBSet(MDB, (void*)&hcsock.sock, sizeof(Socket), (void*)&hcsock, sizeof(ClientSockHandle));
+
     return hcsock;
 }
 
@@ -81,21 +90,32 @@ void ServiceStop(ClientSockHandle hcsock)
 {
     printf("Close connnection from %s\n", hcsock.addr);
     close(hcsock.sock);
+
+    MDBDel(MDB, &hcsock.sock, sizeof(Socket));
 }
 
-void SendMsg(Socket sockfd, char *buf)
+void SendMsg(ClientSockHandle hcsock, char *buf)
 {
-    assert(sockfd != -1);
-    int res = send(sockfd, buf, MAX_BUF_LEN, 0);
+    assert(hcsock.sock != -1);
+    int res = send(hcsock.sock, buf, MAX_BUF_LEN, 0);
     if (res == -1) 
         perror("send");
+
+    MDBSet(MDB, &hcsock.sock, sizeof(Socket), &hcsock, sizeof(ClientSockHandle));
 }
 
-void RecvMsg(Socket sockfd, char *buf)
+ClientSockHandle *RecvMsg(Socket sockfd, char *buf)
 {
+    ClientSockHandle *phcsock;
+
     assert(sockfd != -1);
     int res = recv(sockfd, buf, MAX_BUF_LEN, 0);
     if (res == -1)
         perror("receive");
+
+    int vsize = -1;
+    phcsock = MDBGet(MDB, &sockfd, sizeof(Socket), &vsize); // free in HanldeRequest
+
+    return phcsock;
 }
 
