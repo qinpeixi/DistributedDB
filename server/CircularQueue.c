@@ -1,24 +1,49 @@
 /*************************************************************************/
 /* Copyright (C) Network Programming -USTC, 2012                         */
 /*                                                                       */
-/*  File Name              :  server/HandleRequest.h                     */
+/*  File Name              :  server/CircularQueue.c                     */
 /*  Pricipal Author        :  qinpxi                                     */
 /*  Subsystem Name         :                                             */
 /*  Module Name            :                                             */
 /*  Language               :                                             */
 /*  Target Environment     :                                             */
-/*  Created Time           :  Tue 25 Dec 2012 11:03:41 AM CST            */
+/*  Created Time           :  Tue 25 Dec 2012 03:31:01 PM CST            */
 /*  Description            :                                             */
 /*************************************************************************/
 
-#ifndef HANDLE_REQUEST_H
-#define HANDLE_REQUESE_H
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include "CircularQueue.h"
 
-#include <semaphore.h>
+#define MAX_QUEUE_LEN 1024
 
-extern sem_t MSG_SEM;
+QueueNode Q[MAX_QUEUE_LEN];
+int head = 0;
+int tail = 0;
 
-void InitThreads();
-void KillThreads();
+void InitQueue()
+{
+    int i;
+    for (i=0; i<MAX_QUEUE_LEN; i++)
+        Q[i].buf = (char *)malloc(MAX_BUF_LEN);
+}
 
-#endif
+void EnQueue(QueueNode *pnode)
+{
+    memcpy(&Q[tail], pnode, sizeof(QueueNode));
+    tail = (tail+1) % MAX_QUEUE_LEN;
+}
+
+QueueNode *DeQueue()
+{
+    QueueNode *pnode = &Q[head];
+    head = (head+1) % MAX_QUEUE_LEN;
+    
+    return pnode;
+}
+
+int isQueueFull()
+{
+    return head == (tail+1) % MAX_QUEUE_LEN;
+}

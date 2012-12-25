@@ -13,25 +13,24 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <pthread.h>
 #include <sys/epoll.h>
+#include <semaphore.h>
 #include "serversocket.h"
+#include "CircularQueue.h"
 #include "HandleRequest.h"
-
-char szBuf[MAX_BUF_LEN] = "\0";
-pthread_mutex_t mutex;
 
 int main()
 {
     Socket listensock;
-    pthread_t thread_id;
     int epollid;
     struct epoll_event event;
+    char szBuf[MAX_BUF_LEN] = "\0";
 
     if (-1 == InitializeService(&listensock, LOCAL_ADDR))
         return -1;
-    pthread_mutex_init(&mutex, NULL);
+    InitQueue(); // message queue is shared by all threads
+    sem_init(&MSG_SEM, 0, 0); // also shared by all threads
+    InitThreads();
 
     epollid = epoll_create(1024);
     event.data.fd = listensock;
@@ -47,6 +46,7 @@ int main()
             hcsock = ServiceStart(listensock);
             if (hcsock.sock == -1)
                 continue;
+
             event.data.fd = hcsock.sock;
             event.events = EPOLLIN;
             epoll_ctl(epollid, EPOLL_CTL_ADD, hcsock.sock, &event);
@@ -55,15 +55,19 @@ int main()
         {
             ClientSockHandle *phcsock;
             phcsock = RecvMsg(event.data.fd, szBuf);
-            if (0 != pthread_create(&thread_id, NULL, (void*)HandleRequest, (void*)phcsock))
-            {
-                perror("create thread");
-                ServiceStop(*phcsock);
-            }
+
+            QueueNode qn;
+            qn.hcsock = *phcsock;
+            qn.buf = szBuf;
+
+            EnQueue(&qn);
+            sem_post(&MSG_SEM);
+            free(phcsock);
         }
     }
 
-    pthread_mutex_destroy(&mutex);
+    sem_destroy(&MSG_SEM);
+    KillThreads();
     ShutdownService(listensock);
 
     return 0;

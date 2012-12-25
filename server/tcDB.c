@@ -38,6 +38,8 @@ DataBase DBCreate(char *dbName)
     OpenedDB *podb;
     int ecode;
 
+    /* !!!!!!!!!!!!!! */
+    /* memory leakage */
     podb = GetOpenedDB(dbName);
 
     if (podb == NULL)
