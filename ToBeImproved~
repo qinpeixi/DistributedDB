@@ -2,5 +2,3 @@
 1. 把对server端tcDB的互斥锁挪到tcDB里面
 2. 把server的socket设为非阻塞
 3. 数据包头转换到网络字节顺序
-4. server端tcDB的内存泄漏问题
-5. recv数据的释放问题
