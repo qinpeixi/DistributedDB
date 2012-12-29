@@ -9,7 +9,7 @@ SERVERSRC = $(wildcard ./server/*.c ./common/*.c)
 CLIENTOBJ = $(CLIENTSRC:.c=.o)
 SERVEROBJ = $(SERVERSRC:.c=.o)
 
-TESTTARGET = ./test/testtcDB ./test/testProtocol ./test/testMemory
+TESTTARGET = ./test/testtcDB ./test/testProtocol ./test/testMemory ./test/testCircularQueue
 TESTSRC   = $(wildcard ./test/*.c)
 TESTOBJ   = $(TESTSRC:.c=.o) ./server/tcDB.o ./common/dbProtocol.o ./server/MemoryDB.o \
 		./server/CircularQueue.o
