@@ -13,7 +13,7 @@ TESTTARGET = ./test/testtcDB ./test/testProtocol ./test/testMemory
 TESTSRC   = $(wildcard ./test/*.c)
 TESTOBJ   = $(TESTSRC:.c=.o) ./server/tcDB.o ./common/dbProtocol.o ./server/MemoryDB.o
 
-FINDRUBISHFILES = find . -regex '.*\.gch\|.*~\|.*\..*db' -type f
+RUBBISHFILES = find . -regex '.*\.gch\|.*~\|.*\..*db' -type f
 
 all: $(TARGET)
 ddbclient: $(CLIENTOBJ)
@@ -34,9 +34,9 @@ test:   $(TESTOBJ)
 
 clean:
 	@$(RM) $(CLIENTOBJ) $(SERVEROBJ) $(TARGET)
-	@$(FINDRUBISHFILES) | xargs $(RM)
+	@$(RUBBISHFILES) | xargs $(RM)
 	@$(RM) *.o
 
 cleantest:
 	@$(RM) $(TESTOBJ) $(TESTTARGET)
-	@$(RM) *.*db *.gch *~
+	@$(RUBBISHFILES) | xargs $(RM)
