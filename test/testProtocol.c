@@ -23,7 +23,6 @@ int main()
     char buf[MAXPACKETLEN];
     char value[128] = "Hello World!";
 
-    printf("\n>>>>> Test dbProtocol.c  <<<<<\n");
     hd.cmd = SET;
     hd.key = 100;
     WriteHeader(buf, &hd);
@@ -32,7 +31,7 @@ int main()
     assert(phd->cmd == hd.cmd);
     assert(phd->key == hd.key);
     assert(strcmp(GetAppend(phd), value) == 0);
-    printf(">>>>> Test report of dbProtocol.c : PASS.\n\n");
+    printf("Test of dbProtocol.c          : PASS\n");
     return 0;
 }
 

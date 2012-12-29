@@ -27,7 +27,6 @@ int main()
     int sock = 1;
     ClientSocket cs;
 
-    printf(">>>>> Test MemoryDB.c <<<<<\n");
     cs.sock = sock;
     MemDB mdb = MDBCreate();
     MDBSet(mdb, &sock, sizeof(int), &cs, sizeof(ClientSocket));
@@ -37,7 +36,7 @@ int main()
     pcs = MDBGet(mdb, &sock, sizeof(int), &vsize);
 
     assert(pcs->sock = sock);
-    printf(">>>>> Test report of MemoryDB.c : PASS\n\n");
+    printf("Test of MemoryDB.c            : PASS\n");
 
     return 0;
 }

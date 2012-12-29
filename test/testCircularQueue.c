@@ -1,56 +1,48 @@
 /*************************************************************************/
 /* Copyright (C) Network Programming -USTC, 2012                         */
 /*                                                                       */
-/*  File Name              :  server/CircularQueue.c                     */
+/*  File Name              :  testCircularQueue.c                        */
 /*  Pricipal Author        :  qinpxi                                     */
 /*  Subsystem Name         :                                             */
 /*  Module Name            :                                             */
 /*  Language               :                                             */
 /*  Target Environment     :                                             */
-/*  Created Time           :  Tue 25 Dec 2012 03:31:01 PM CST            */
+/*  Created Time           :  Sat 29 Dec 2012 10:58:31 AM CST            */
 /*  Description            :                                             */
 /*************************************************************************/
 
 #include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 #include <assert.h>
-#include "CircularQueue.h"
+#include "../server/CircularQueue.h"
 
-
-QueueNode Q[MAX_QUEUE_LEN];
-int head = 0;
-int tail = 0;
-
-void InitQueue()
+int main()
 {
+    QueueNode q;
+    QueueNode *pq;
     int i;
-    for (i=0; i<MAX_QUEUE_LEN; i++)
-        Q[i].buf = (char *)malloc(MAX_BUF_LEN);
-}
+    InitQueue();
+    for (i=0; i<MAX_QUEUE_USELEN; i++)
+    {
+        q.hcsock.sock = i;
+        EnQueue(&q);
+    }
+    assert(isQueueFull() != 0);
 
-void EnQueue(QueueNode *pnode)
-{
+    for (i=0; i<MAX_QUEUE_USELEN/2; i++)
+    {
+        pq = DeQueue();
+        assert(pq->hcsock.sock == i);
+    }
     assert(isQueueFull() == 0);
-    memcpy(&Q[tail], pnode, sizeof(QueueNode));
-    tail = (tail+1) % MAX_QUEUE_LEN;
-}
 
-QueueNode *DeQueue()
-{
-    assert(isQueueEmpty() == 0);
-    QueueNode *pnode = &Q[head];
-    head = (head+1) % MAX_QUEUE_LEN;
-    
-    return pnode;
-}
+    while (isQueueEmpty() == 0)
+    {
+        pq = DeQueue();
+        assert(pq->hcsock.sock == i++);
+    }
+    assert(i == MAX_QUEUE_USELEN);
 
-int isQueueFull()
-{
-    return head == (tail+1) % MAX_QUEUE_LEN;
-}
+    printf("Test of CircularQueue.c       : PASS\n");
 
-int isQueueEmpty()
-{
-    return head == tail;
+    return 0;
 }

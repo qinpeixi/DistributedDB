@@ -14,8 +14,10 @@
 #ifndef CIRCULAR_QUEUE_H
 #define CIRCULAR_QUEUE_H
 
-#include "../common/dbProtocol.h"
 #include "serversocket.h"
+
+#define MAX_QUEUE_LEN 10
+#define MAX_QUEUE_USELEN (MAX_QUEUE_LEN - 1)
 
 typedef struct
 {
@@ -31,5 +33,7 @@ QueueNode *DeQueue();
 
 /* return : 0-not full, 1-full */
 int isQueueFull();
+/* return : 0-not empty, 1-empty */
+int isQueueEmpty();
 
 #endif

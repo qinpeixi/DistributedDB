@@ -20,7 +20,6 @@ int main()
     dbKey key;
     dbValue setvalue;
     dbValue getvalue;
-    printf("\n>>>>> Test tcDB.c  <<<<<\n");
     DataBase hdb = DBCreate(".//test//abc.db");
     key = 100;
     setvalue = "hello world";
@@ -31,6 +30,6 @@ int main()
     assert(getvalue != NULL);
     ret = DBDelKeyValue(hdb, key);
     assert(ret == 0);
-    printf(">>>>> Test report of tcDB.c :  PASS\n\n");
+    printf("Test of tcDB.c                : PASS\n");
     return 0;
 }

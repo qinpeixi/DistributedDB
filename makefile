@@ -11,7 +11,8 @@ SERVEROBJ = $(SERVERSRC:.c=.o)
 
 TESTTARGET = ./test/testtcDB ./test/testProtocol ./test/testMemory
 TESTSRC   = $(wildcard ./test/*.c)
-TESTOBJ   = $(TESTSRC:.c=.o) ./server/tcDB.o ./common/dbProtocol.o ./server/MemoryDB.o
+TESTOBJ   = $(TESTSRC:.c=.o) ./server/tcDB.o ./common/dbProtocol.o ./server/MemoryDB.o \
+		./server/CircularQueue.o
 
 RUBBISHFILES = find . -regex '.*\.gch\|.*~\|.*\..*db' -type f
 
@@ -28,6 +29,8 @@ test:   $(TESTOBJ)
 	$(ECHO) ./test/testProtocol
 	$(ECHO) $(CXX) -o ./test/testMemory ./test/testMDB.o ./server/MemoryDB.o -ltokyocabinet
 	$(ECHO) ./test/testMemory
+	$(ECHO) $(CXX) -o ./test/testCircularQueue ./test/testCircularQueue.o ./server/CircularQueue.o
+	$(ECHO) ./test/testCircularQueue
 
 .c.o:
 	$(ECHO) $(CXX) -c $(CXXFLAGS) $< -o $@
