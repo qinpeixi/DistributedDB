@@ -22,7 +22,7 @@
 
 MemDB MDB;
 
-int InitializeService(Socket *psockfd, char *addr)
+int InitializeService(Socket *psockfd, char *addr, int port)
 {
     struct sockaddr_in sa;
 
@@ -34,7 +34,7 @@ int InitializeService(Socket *psockfd, char *addr)
     }
 
     sa.sin_family = AF_INET;
-    sa.sin_port = htons(PORT);
+    sa.sin_port = htons(port);
     sa.sin_addr.s_addr = addr ? inet_addr(addr) : INADDR_ANY;
     memset(&sa.sin_zero, 0, 8);
 
@@ -86,12 +86,16 @@ ClientSockHandle ServiceStart(Socket sockfd)
     return hcsock;
 }
 
-void ServiceStop(ClientSockHandle hcsock)
+void ServiceStop(Socket sockfd)
 {
-    printf("Close connnection from %s\n", hcsock.addr);
-    close(hcsock.sock);
+    ClientSockHandle *phcsock;
+    int vsize = -1;
 
-    MDBDel(MDB, &hcsock.sock, sizeof(Socket));
+    phcsock = MDBGet(MDB, &sockfd, sizeof(Socket), &vsize); // free in HanldeRequest
+    printf("Close connnection from %s\n", phcsock->addr);
+    close(phcsock->sock);
+
+    MDBDel(MDB, &(phcsock->sock), sizeof(Socket));
 }
 
 void SendMsg(ClientSockHandle hcsock, char *buf)

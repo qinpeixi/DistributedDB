@@ -20,7 +20,7 @@
 #include <assert.h>
 #include "clientsocket.h"
 
-int OpenRemoteService(Socket *psockfd, char *addr)
+int OpenRemoteService(Socket *psockfd, char *addr, int port)
 {
     struct sockaddr_in sa;
 
@@ -32,7 +32,7 @@ int OpenRemoteService(Socket *psockfd, char *addr)
     }
 
     sa.sin_family = AF_INET;
-    sa.sin_port = htons(PORT);
+    sa.sin_port = htons(port);
     sa.sin_addr.s_addr = addr ? inet_addr(addr) : inet_addr(LOCAL_ADDR);
     memset(&sa.sin_zero, 0, 8);
 

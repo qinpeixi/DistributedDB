@@ -19,14 +19,20 @@
 #include "CircularQueue.h"
 #include "HandleRequest.h"
 
-int main()
+int main(int argc, char *argv[])
 {
     Socket listensock;
     int epollid;
     struct epoll_event event;
     char szBuf[MAX_BUF_LEN] = "\0";
 
-    if (-1 == InitializeService(&listensock, LOCAL_ADDR))
+    if (argc != 3)
+    {
+        printf("Address and port is needed.\n");
+        exit(-1);
+    }
+
+    if (-1 == InitializeService(&listensock, argv[1], atoi(argv[2])))
         return -1;
     InitQueue(); // message queue is shared by all threads
     sem_init(&MSG_SEM, 0, 0); // also shared by all threads
@@ -50,6 +56,10 @@ int main()
             event.data.fd = hcsock.sock;
             event.events = EPOLLIN;
             epoll_ctl(epollid, EPOLL_CTL_ADD, hcsock.sock, &event);
+        }
+        else if ((event.events & EPOLLIN) && (event.events & EPOLLRDHUP))
+        {
+            ServiceStop(event.data.fd);
         }
         else
         {

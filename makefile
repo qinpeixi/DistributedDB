@@ -21,6 +21,10 @@ ddbclient: $(CLIENTOBJ)
 	$(ECHO) $(CXX) -o $@ $^
 ddbserver: $(SERVEROBJ)
 	$(ECHO) $(CXX) -o $@ $^ -ltokyocabinet
+	$(ECHO) mkdir server1 server2 server3
+	$(ECHO) cp ddbserver ./server1/
+	$(ECHO) cp ddbserver ./server2/
+	$(ECHO) cp ddbserver ./server3/
 
 test:   $(TESTOBJ) 
 	$(ECHO) $(CXX) -o ./test/testtcDB ./test/testtcDB.o ./server/tcDB.o -ltokyocabinet
@@ -37,6 +41,7 @@ test:   $(TESTOBJ)
 
 clean:
 	@$(RM) $(CLIENTOBJ) $(SERVEROBJ) $(TARGET)
+	@$(RM) -r ./server1 ./server2/ ./server3/
 	@$(RUBBISHFILES) | xargs $(RM)
 	@$(RM) *.o
 

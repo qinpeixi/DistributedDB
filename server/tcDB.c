@@ -17,6 +17,7 @@
 #include <tchdb.h>
 #include <limits.h>
 #include <assert.h>
+#include <pthread.h>
 #include "../common/Database.h"
 
 #define debug(...) ;
@@ -157,6 +158,7 @@ char *DBGetLastErrorMsg()
 }
 
 TCMDB *mdb = NULL;  // The db to save all of the opened db
+pthread_mutex_t DBMUTEX;
 
 /* if the db specified by name is not open, return NULL */
 OpenedDB *GetOpenedDB(char *name)
@@ -164,11 +166,13 @@ OpenedDB *GetOpenedDB(char *name)
     if (mdb == NULL)
     {
         mdb = tcmdbnew();
+        pthread_mutex_init(&DBMUTEX, NULL);
         return NULL;
     }
 
     OpenedDB *podb;
     int valuelen = -1;
+    pthread_mutex_lock(&DBMUTEX);
     podb = (OpenedDB *)tcmdbget(mdb, name, strlen(name), &valuelen);
     if (podb != NULL)
     {
@@ -176,6 +180,7 @@ OpenedDB *GetOpenedDB(char *name)
         tcmdbput(mdb, name, strlen(name), podb, sizeof(OpenedDB));
         debug("%s's counter is %d\n", podb->name, podb->counter);
     }
+    pthread_mutex_unlock(&DBMUTEX);
 
     return podb;
 }
@@ -199,11 +204,13 @@ OpenedDB *AddOpenedDB(char *name, TCHDB *hdb)
 int DelOpenedDB(OpenedDB *podb)
 {
     int valuelen = -1;
+    pthread_mutex_lock(&DBMUTEX);
     podb = (OpenedDB *)tcmdbget(mdb, podb->name, strlen(podb->name), &valuelen);
     podb->counter --;
     if (podb->counter == 0)
     {
         tcmdbout2(mdb, podb->name);
+        pthread_mutex_unlock(&DBMUTEX);
         debug("%s's counter is %d\n", podb->name, podb->counter);
         free(podb->name);
         return 1;
@@ -211,6 +218,7 @@ int DelOpenedDB(OpenedDB *podb)
     else
     {
         tcmdbput(mdb, podb->name, strlen(podb->name), podb, sizeof(OpenedDB));
+        pthread_mutex_unlock(&DBMUTEX);
         debug("%s's counter is %d\n", podb->name, podb->counter);
         return 0;
     }

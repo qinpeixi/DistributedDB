@@ -28,7 +28,6 @@
 #define pdebug printf
 
 sem_t MSG_SEM;
-pthread_mutex_t DBMUTEX;
 pthread_t thread_id[THREADS_NUM];
 
 void HandleRequest(int id);
@@ -45,7 +44,6 @@ void InitThreads()
         //printf("The no.%d thread's id is %u\n", i, (int)thread_id[i]);
     }
 
-    pthread_mutex_init(&DBMUTEX, NULL);
 }
 
 void KillThreads()
@@ -54,7 +52,7 @@ void KillThreads()
     for (i=0; i<THREADS_NUM; i++)
         pthread_cancel(thread_id[i]);
 
-    pthread_mutex_destroy(&DBMUTEX);
+    //pthread_mutex_destroy(&DBMUTEX);
 }
 
 void HandleRequest(int id)
@@ -76,15 +74,13 @@ void HandleRequest(int id)
         hdb = pnode->hcsock.app; // will be changed only when 'OPEN'
         precvhd = (DBPacketHeader *)pnode->buf;
         pdebug("Thread %u received:\n", id);
-        debug(szBuf);
+        debug(precvhd);
 
         switch (precvhd->cmd)
         {
             case OPEN:
                 {
-                    pthread_mutex_lock(&DBMUTEX);
                     hdb = DBCreate(GetAppend(precvhd));
-                    pthread_mutex_unlock(&DBMUTEX);
                     hcsock.app = hdb;
                     if (hdb == NULL)
                         sendhd.cmd = CMDFAIL;
@@ -94,9 +90,7 @@ void HandleRequest(int id)
                 }
             case CLOSE:
                 {
-                    pthread_mutex_lock(&DBMUTEX);
                     int res = DBDelete(hdb);
-                    pthread_mutex_unlock(&DBMUTEX);
                     if (res != 0)
                         sendhd.cmd = CMDFAIL;
                     else
@@ -150,6 +144,6 @@ void HandleRequest(int id)
         SendMsg(hcsock, szReplyMsg);
 
         if (sendhd.cmd == CLOSE_R)
-            ServiceStop(hcsock); 
+            ServiceStop(hcsock.sock); 
     }
 }

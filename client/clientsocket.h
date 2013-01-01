@@ -16,7 +16,7 @@
 
 #include "../common/Socket.h"
 
-int OpenRemoteService(Socket *sockfd, char *addr);
+int OpenRemoteService(Socket *sockfd, char *addr, int port);
 
 void CloseRemoteService(Socket sockfd);
 

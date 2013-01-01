@@ -26,13 +26,13 @@ typedef struct
     void *app; // to take sth with socket
 } ClientSockHandle;
 
-int InitializeService(Socket *sockfd, char *addr);
+int InitializeService(Socket *sockfd, char *addr, int port);
 
 void ShutdownService(Socket sockfd);
 
 ClientSockHandle ServiceStart(Socket sockfd);
 
-void ServiceStop(ClientSockHandle hcsock);
+void ServiceStop(Socket sockfd);
 
 void SendMsg(ClientSockHandle hcsock, char *buf);
 

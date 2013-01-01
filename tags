@@ -1,0 +1,218 @@
+	dbss.vim	/^map  ggVGY$/;"	m
+	dbss.vim	/^map!  ggVGY$/;"	m
+	dbss.vim	/^vmap  "+y$/;"	m
+	dbss.vim	/^map!  ,$/;"	m
+	dbss.vim	/^map!  zzi$/;"	m
+c	dbss.vim	/^nmap c :cs find c =expand("<cword>")$/;"	m
+d	dbss.vim	/^nmap d :cs find d =expand("<cword>")$/;"	m
+e	dbss.vim	/^nmap e :cs find e =expand("<cword>")$/;"	m
+f	dbss.vim	/^nmap f :cs find f =expand("<cfile>")$/;"	m
+g	dbss.vim	/^nmap g :cs find g =expand("<cword>")$/;"	m
+i	dbss.vim	/^nmap i :cs find i ^=expand("<cfile>")$/;"	m
+s	dbss.vim	/^nmap s :cs find s =expand("<cword>")$/;"	m
+t	dbss.vim	/^nmap t :cs find t =expand("<cword>")$/;"	m
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+013l	dbss.vim	/^normal! 013l$/;"	m
+023l	dbss.vim	/^normal! 023l$/;"	m
+039l	dbss.vim	/^normal! 039l$/;"	m
+04l	dbss.vim	/^normal! 04l$/;"	m
+<C-F2>	dbss.vim	/^nnoremap <C-F2> :vert diffsplit $/;"	m
+<C-F3>	dbss.vim	/^map <C-F3> \\be  $/;"	m
+<C-F5>	dbss.vim	/^map <C-F5> :call CompileRunGcc()$/;"	m
+<F12>	dbss.vim	/^map <F12> gg=G$/;"	m
+<F2>	dbss.vim	/^nnoremap <F2> :g\/^\\s*$\/d$/;"	m
+<F3>	dbss.vim	/^map <F3> :tabnew .$/;"	m
+<F5>	dbss.vim	/^map <F5> :call Rungdb()$/;"	m
+<F6>	dbss.vim	/^map <F6> :call CompileC()$/;"	m
+<F7>	dbss.vim	/^map <F7> :tabp$/;"	m
+<F8>	dbss.vim	/^map <F8> :tabn$/;"	m
+<F9>	dbss.vim	/^nmap <silent> <F9> :Tlist$/;"	m
+<Nul><Nul>c	dbss.vim	/^nmap <Nul><Nul>c :vert scs find c =expand("<cword>")$/;"	m
+<Nul><Nul>d	dbss.vim	/^nmap <Nul><Nul>d :vert scs find d =expand("<cword>")$/;"	m
+<Nul><Nul>e	dbss.vim	/^nmap <Nul><Nul>e :vert scs find e =expand("<cword>")$/;"	m
+<Nul><Nul>f	dbss.vim	/^nmap <Nul><Nul>f :vert scs find f =expand("<cfile>")$/;"	m
+<Nul><Nul>g	dbss.vim	/^nmap <Nul><Nul>g :vert scs find g =expand("<cword>")$/;"	m
+<Nul><Nul>i	dbss.vim	/^nmap <Nul><Nul>i :vert scs find i ^=expand("<cfile>")$/;"	m
+<Nul><Nul>s	dbss.vim	/^nmap <Nul><Nul>s :vert scs find s =expand("<cword>")$/;"	m
+<Nul><Nul>t	dbss.vim	/^nmap <Nul><Nul>t :vert scs find t =expand("<cword>")$/;"	m
+<Nul>c	dbss.vim	/^nmap <Nul>c :scs find c =expand("<cword>")$/;"	m
+<Nul>d	dbss.vim	/^nmap <Nul>d :scs find d =expand("<cword>")$/;"	m
+<Nul>e	dbss.vim	/^nmap <Nul>e :scs find e =expand("<cword>")$/;"	m
+<Nul>f	dbss.vim	/^nmap <Nul>f :scs find f =expand("<cfile>")$/;"	m
+<Nul>g	dbss.vim	/^nmap <Nul>g :scs find g =expand("<cword>")$/;"	m
+<Nul>i	dbss.vim	/^nmap <Nul>i :scs find i ^=expand("<cfile>")$/;"	m
+<Nul>s	dbss.vim	/^nmap <Nul>s :scs find s =expand("<cword>")$/;"	m
+<Nul>t	dbss.vim	/^nmap <Nul>t :scs find t =expand("<cword>")$/;"	m
+<Plug>NetrwBrowseX	dbss.vim	/^nnoremap <silent> <Plug>NetrwBrowseX :call netrw#NetrwBrowseX(expand("<cWORD>"),0)$/;"	m
+ADDR_STR_LEN	common/Socket.h	19;"	d
+APPENDSIZE	common/dbProtocol.h	34;"	d
+AddOpenedDB	server/tcDB.c	/^OpenedDB *AddOpenedDB(char *name, TCHDB *hdb)$/;"	f
+Append	common/dbProtocol.c	/^int Append(char *buf, char *data, int len)$/;"	f
+CIRCULAR_QUEUE_H	server/CircularQueue.h	15;"	d
+CLIENTOBJ	makefile	/^CLIENTOBJ = $(CLIENTSRC:.c=.o)$/;"	m
+CLIENTSOCKET_H	client/clientsocket.h	15;"	d
+CLIENTSRC	makefile	/^CLIENTSRC = $(wildcard .\/client\/*.c .\/common\/*.c)$/;"	m
+CLOSE	common/dbProtocol.h	/^enum CMD {SET,   GET,   DEL,   OPEN,   CLOSE,   QUIT,  HELP,$/;"	e	enum:CMD
+CLOSE_R	common/dbProtocol.h	/^          SET_R, GET_R, DEL_R, OPEN_R, CLOSE_R, QUIT_R, CMDFAIL};$/;"	e	enum:CMD
+CMD	common/dbProtocol.h	/^enum CMD {SET,   GET,   DEL,   OPEN,   CLOSE,   QUIT,  HELP,$/;"	g
+CMDFAIL	common/dbProtocol.h	/^          SET_R, GET_R, DEL_R, OPEN_R, CLOSE_R, QUIT_R, CMDFAIL};$/;"	e	enum:CMD
+CXX	makefile	/^CXX = gcc$/;"	m
+CXXFLAGS	makefile	/^CXXFLAGS = -O2 -Wall -g$/;"	m
+Check	client/parseinput.c	/^int Check(const char *pat, const char *str)$/;"	f
+ClientSockHandle	server/serversocket.h	/^} ClientSockHandle;$/;"	t	typeref:struct:__anon3
+ClientSocket	test/testMDB.c	/^} ClientSocket;$/;"	t	typeref:struct:__anon1	file:
+CloseAllCloudNodes	client/netdbapi.c	/^int CloseAllCloudNodes(DataBase hdb, char *buf)$/;"	f
+CloseRemoteService	client/clientsocket.c	/^void CloseRemoteService(Socket sockfd)$/;"	f
+CloudNode	client/netdbapi.c	/^} CloudNode;$/;"	t	typeref:struct:__anon6	file:
+DBCreate	client/netdbapi.c	/^DataBase DBCreate(char *dbName)$/;"	f
+DBCreate	server/tcDB.c	/^DataBase DBCreate(char *dbName)$/;"	f
+DBDelKeyValue	client/netdbapi.c	/^int DBDelKeyValue(DataBase hdb, dbKey key)$/;"	f
+DBDelKeyValue	server/tcDB.c	/^int DBDelKeyValue(DataBase db, dbKey key)$/;"	f
+DBDelete	client/netdbapi.c	/^int DBDelete(DataBase hdb)$/;"	f
+DBDelete	server/tcDB.c	/^int DBDelete(DataBase db)$/;"	f
+DBGetKeyValue	client/netdbapi.c	/^dbValue DBGetKeyValue(DataBase hdb, dbKey key)$/;"	f
+DBGetKeyValue	server/tcDB.c	/^dbValue DBGetKeyValue(DataBase db, dbKey key)$/;"	f
+DBGetLastErrorMsg	server/tcDB.c	/^char *DBGetLastErrorMsg()$/;"	f
+DBMUTEX	server/HandleRequest.c	/^pthread_mutex_t DBMUTEX;$/;"	v
+DBName	client/dbclient.c	/^char *DBName;$/;"	v
+DBPROTOCOL_H	common/dbProtocol.h	15;"	d
+DBPacketHeader	common/dbProtocol.h	/^} DBPacketHeader;$/;"	t	typeref:struct:__anon2
+DBSetKeyValue	client/netdbapi.c	/^int DBSetKeyValue(DataBase hdb, dbKey key, dbValue value)$/;"	f
+DBSetKeyValue	server/tcDB.c	/^int DBSetKeyValue(DataBase db, dbKey key, dbValue value)$/;"	f
+DEL	common/dbProtocol.h	/^enum CMD {SET,   GET,   DEL,   OPEN,   CLOSE,   QUIT,  HELP,$/;"	e	enum:CMD
+DEL_R	common/dbProtocol.h	/^          SET_R, GET_R, DEL_R, OPEN_R, CLOSE_R, QUIT_R, CMDFAIL};$/;"	e	enum:CMD
+DataBase	common/Database.h	/^typedef void*          DataBase;$/;"	t
+DeQueue	server/CircularQueue.c	/^QueueNode *DeQueue()$/;"	f
+Debu	common/dbProtocol.h	81;"	d
+DelOpenedDB	server/tcDB.c	/^int DelOpenedDB(OpenedDB *podb)$/;"	f
+ECHO	makefile	/^ECHO = @$/;"	m
+EnQueue	server/CircularQueue.c	/^void EnQueue(QueueNode *pnode)$/;"	f
+FAILURE	common/Database.h	26;"	d
+GET	common/dbProtocol.h	/^enum CMD {SET,   GET,   DEL,   OPEN,   CLOSE,   QUIT,  HELP,$/;"	e	enum:CMD
+GET_R	common/dbProtocol.h	/^          SET_R, GET_R, DEL_R, OPEN_R, CLOSE_R, QUIT_R, CMDFAIL};$/;"	e	enum:CMD
+GetAppend	common/dbProtocol.c	/^char *GetAppend(DBPacketHeader *phd)$/;"	f
+GetHeader	common/dbProtocol.c	/^DBPacketHeader *GetHeader(char *buf)$/;"	f
+GetMatch	client/parseinput.c	/^int GetMatch(const char *pat, char *str, char *match)$/;"	f
+GetOpenedDB	server/tcDB.c	/^OpenedDB *GetOpenedDB(char *name)$/;"	f
+GetSocket	client/netdbapi.c	/^Socket *GetSocket(DataBase hdb, dbKey key)$/;"	f
+HANDLE_REQUESE_H	server/HandleRequest.h	15;"	d
+HELP	common/dbProtocol.h	/^enum CMD {SET,   GET,   DEL,   OPEN,   CLOSE,   QUIT,  HELP,$/;"	e	enum:CMD
+HandleRequest	server/HandleRequest.c	/^void HandleRequest(int id)$/;"	f
+HelpPrompt	client/parseinput.c	/^void HelpPrompt()$/;"	f
+InitQueue	server/CircularQueue.c	/^void InitQueue()$/;"	f
+InitThreads	server/HandleRequest.c	/^void InitThreads()$/;"	f
+InitializeService	server/serversocket.c	/^int InitializeService(Socket *psockfd, char *addr, int port)$/;"	f
+KillThreads	server/HandleRequest.c	/^void KillThreads()$/;"	f
+LOCAL_ADDR	common/Socket.h	18;"	d
+MAXPACKETLEN	common/dbProtocol.h	33;"	d
+MAX_BUF_LEN	common/Socket.h	20;"	d
+MAX_CONNECT_QUEUE	server/serversocket.h	19;"	d
+MAX_INPUT_LEN	client/parseinput.h	19;"	d
+MAX_QUEUE_LEN	server/CircularQueue.h	19;"	d
+MAX_QUEUE_USELEN	server/CircularQueue.h	20;"	d
+MAX_STRADDR_LEN	server/serversocket.h	20;"	d
+MDB	server/serversocket.c	/^MemDB MDB;$/;"	v
+MDBClose	server/MemoryDB.c	/^void MDBClose(MemDB mdb)$/;"	f
+MDBCreate	server/MemoryDB.c	/^MemDB MDBCreate()$/;"	f
+MDBDel	server/MemoryDB.c	/^void MDBDel(MemDB mdb, void *kbuf, int ksize)$/;"	f
+MDBGet	server/MemoryDB.c	/^void *MDBGet(MemDB mdb, void *kbuf, int ksize, int *sp)$/;"	f
+MDBSet	server/MemoryDB.c	/^void MDBSet(MemDB mdb, void *kbuf, int ksize, void *vbuf, int vsize)$/;"	f
+MEMORYDB_H	server/MemoryDB.h	15;"	d
+MSG_SEM	server/HandleRequest.c	/^sem_t MSG_SEM;$/;"	v
+MemDB	server/MemoryDB.h	/^typedef void *MemDB;$/;"	t
+NODES_NUM	client/netdbapi.c	22;"	d	file:
+OPEN	common/dbProtocol.h	/^enum CMD {SET,   GET,   DEL,   OPEN,   CLOSE,   QUIT,  HELP,$/;"	e	enum:CMD
+OPEN_R	common/dbProtocol.h	/^          SET_R, GET_R, DEL_R, OPEN_R, CLOSE_R, QUIT_R, CMDFAIL};$/;"	e	enum:CMD
+OpenAllCloudNodes	client/netdbapi.c	/^DataBase OpenAllCloudNodes(char *buf)$/;"	f
+OpenRemoteService	client/clientsocket.c	/^int OpenRemoteService(Socket *psockfd, char *addr, int port)$/;"	f
+OpenedDB	server/tcDB.c	/^} OpenedDB;$/;"	t	typeref:struct:__anon4	file:
+PARSEINPUT_H	client/parseinput.h	15;"	d
+PORT	common/Socket.h	17;"	d
+Parse	client/parseinput.c	/^int Parse(char *input)$/;"	f
+Q	server/CircularQueue.c	/^QueueNode Q[MAX_QUEUE_LEN];$/;"	v
+QUIT	common/dbProtocol.h	/^enum CMD {SET,   GET,   DEL,   OPEN,   CLOSE,   QUIT,  HELP,$/;"	e	enum:CMD
+QUIT_R	common/dbProtocol.h	/^          SET_R, GET_R, DEL_R, OPEN_R, CLOSE_R, QUIT_R, CMDFAIL};$/;"	e	enum:CMD
+QueueNode	server/CircularQueue.h	/^} QueueNode;$/;"	t	typeref:struct:__anon5
+RUBBISHFILES	makefile	/^RUBBISHFILES = find . -regex '.*\\.gch\\|.*~\\|.*\\..*db' -type f$/;"	m
+ReadCloudNodes	client/netdbapi.c	/^int ReadCloudNodes(CloudNode *pnodes)$/;"	f
+RecvMsg	client/clientsocket.c	/^void RecvMsg(Socket sockfd, char *buf)$/;"	f
+RecvMsg	server/serversocket.c	/^ClientSockHandle *RecvMsg(Socket sockfd, char *buf)$/;"	f
+RegMatch	client/parseinput.c	/^int RegMatch(const char *pat, const char *str, int *start, int *end)$/;"	f
+SERVEROBJ	makefile	/^SERVEROBJ = $(SERVERSRC:.c=.o)$/;"	m
+SERVERSOCKET_H	server/serversocket.h	15;"	d
+SERVERSRC	makefile	/^SERVERSRC = $(wildcard .\/server\/*.c .\/common\/*.c)$/;"	m
+SET	common/dbProtocol.h	/^enum CMD {SET,   GET,   DEL,   OPEN,   CLOSE,   QUIT,  HELP,$/;"	e	enum:CMD
+SET_R	common/dbProtocol.h	/^          SET_R, GET_R, DEL_R, OPEN_R, CLOSE_R, QUIT_R, CMDFAIL};$/;"	e	enum:CMD
+SOCKET_H	common/Socket.h	15;"	d
+SUCCESS	common/Database.h	25;"	d
+SendMsg	client/clientsocket.c	/^void SendMsg(Socket sockfd, char *buf)$/;"	f
+SendMsg	server/serversocket.c	/^void SendMsg(ClientSockHandle hcsock, char *buf)$/;"	f
+ServiceStart	server/serversocket.c	/^ClientSockHandle ServiceStart(Socket sockfd)$/;"	f
+ServiceStop	server/serversocket.c	/^void ServiceStop(ClientSockHandle hcsock)$/;"	f
+SessionLoad	dbss.vim	/^let SessionLoad = 1$/;"	v
+SetLastErrorMsg	server/tcDB.c	/^void SetLastErrorMsg(const char *msg)$/;"	f
+ShutdownService	server/serversocket.c	/^void ShutdownService(Socket sockfd)$/;"	f
+Socket	common/Socket.h	/^typedef int Socket;$/;"	t
+TARGET	makefile	/^TARGET = ddbclient ddbserver$/;"	m
+TESTOBJ	makefile	/^TESTOBJ   = $(TESTSRC:.c=.o) .\/server\/tcDB.o .\/common\/dbProtocol.o .\/server\/MemoryDB.o \\$/;"	m
+TESTSRC	makefile	/^TESTSRC   = $(wildcard .\/test\/*.c)$/;"	m
+TESTTARGET	makefile	/^TESTTARGET = .\/test\/testtcDB .\/test\/testProtocol .\/test\/testMemory .\/test\/testCircularQueue$/;"	m
+THREADS_NUM	server/HandleRequest.c	26;"	d	file:
+WriteHeader	common/dbProtocol.c	/^void WriteHeader(char *buf, DBPacketHeader *header)$/;"	f
+\	dbss.vim	/^map <buffer> \\  :w$/;"	m
+_DATABASE_H_	common/Database.h	15;"	d
+addr	client/netdbapi.c	/^    char addr[ADDR_STR_LEN];$/;"	m	struct:__anon6	file:
+addr	server/serversocket.h	/^    char addr[MAX_STRADDR_LEN];$/;"	m	struct:__anon3
+addr	test/testMDB.c	/^    char addr[50];$/;"	m	struct:__anon1	file:
+app	server/serversocket.h	/^    void *app; \/\/ to take sth with socket$/;"	m	struct:__anon3
+append	test/testMDB.c	/^    void *append;$/;"	m	struct:__anon1	file:
+buf	server/CircularQueue.h	/^    char *buf;$/;"	m	struct:__anon5
+cmd	common/dbProtocol.h	/^    enum CMD cmd;$/;"	m	struct:__anon2	typeref:enum:__anon2::CMD
+counter	server/tcDB.c	/^    int counter; \/\/ should be lock when multi-thread visite$/;"	m	struct:__anon4	file:
+dbKey	common/Database.h	/^typedef unsigned int   dbKey;$/;"	t
+dbValue	common/Database.h	/^typedef char*          dbValue;$/;"	t
+debug	common/dbProtocol.h	83;"	d
+debug	common/dbProtocol.h	88;"	d
+debug	server/tcDB.c	22;"	d	file:
+fi	dbss.vim	/^nmap fi :!firefox %.html & $/;"	m
+gx	dbss.vim	/^nmap gx <Plug>NetrwBrowseX$/;"	m
+hcsock	server/CircularQueue.h	/^    ClientSockHandle hcsock;$/;"	m	struct:__anon5
+hdb	client/parseinput.c	/^DataBase hdb = NULL;$/;"	v
+hdb	server/tcDB.c	/^    TCHDB *hdb;$/;"	m	struct:__anon4	file:
+head	server/CircularQueue.c	/^int head = 0;$/;"	v
+isQueueEmpty	server/CircularQueue.c	/^int isQueueEmpty()$/;"	f
+isQueueFull	server/CircularQueue.c	/^int isQueueFull()$/;"	f
+key	common/dbProtocol.h	/^    int key;$/;"	m	struct:__anon2
+lasterr	server/tcDB.c	/^static char lasterr[1024];$/;"	v	file:
+main	client/dbclient.c	/^int main()$/;"	f
+main	server/dbserver.c	/^int main(int argc, char *argv[])$/;"	f
+main	test/testCircularQueue.c	/^int main()$/;"	f
+main	test/testMDB.c	/^int main()$/;"	f
+main	test/testProtocol.c	/^int main()$/;"	f
+main	test/testtcDB.c	/^int main()$/;"	f
+md	dbss.vim	/^nmap md :!~\/.vim\/markdown.pl % > %.html $/;"	m
+mdb	server/tcDB.c	/^TCMDB *mdb = NULL;  \/\/ The db to save all of the opened db$/;"	v
+name	server/tcDB.c	/^    char *name;$/;"	m	struct:__anon4	file:
+pdebug	server/HandleRequest.c	28;"	d	file:
+port	client/netdbapi.c	/^    int port;$/;"	m	struct:__anon6	file:
+s:cpo_save	dbss.vim	/^let s:cpo_save=&cpo$/;"	v
+s:l	dbss.vim	/^let s:l = 169 - ((36 * winheight(0) + 20) \/ 40)$/;"	v
+s:l	dbss.vim	/^let s:l = 21 - ((20 * winheight(0) + 20) \/ 40)$/;"	v
+s:l	dbss.vim	/^let s:l = 49 - ((36 * winheight(0) + 20) \/ 40)$/;"	v
+s:l	dbss.vim	/^let s:l = 71 - ((18 * winheight(0) + 20) \/ 40)$/;"	v
+s:so_save	dbss.vim	/^let s:so_save = &so | let s:siso_save = &siso | set so=0 siso=0$/;"	v
+s:sx	dbss.vim	/^let s:sx = expand("<sfile>:p:r")."x.vim"$/;"	v
+s:wipebuf	dbss.vim	/^  let s:wipebuf = bufnr('%')$/;"	v
+size	common/dbProtocol.h	/^    int size;$/;"	m	struct:__anon2
+sock	client/netdbapi.c	/^    Socket sock;$/;"	m	struct:__anon6	file:
+sock	server/serversocket.h	/^    Socket sock;$/;"	m	struct:__anon3
+sock	test/testMDB.c	/^    int sock;$/;"	m	struct:__anon1	file:
+tail	server/CircularQueue.c	/^int tail = 0;$/;"	v
+thread_id	server/HandleRequest.c	/^pthread_t thread_id[THREADS_NUM];$/;"	v
+zo	dbss.vim	/^normal zo$/;"	m
+zt	dbss.vim	/^normal! zt$/;"	m

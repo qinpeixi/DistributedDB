@@ -19,6 +19,90 @@
 #include "../common/dbProtocol.h"
 #include "clientsocket.h"
 
+#define NODES_NUM 3 
+
+typedef struct 
+{
+    char addr[ADDR_STR_LEN];
+    int port;
+    Socket sock;
+} CloudNode;
+
+int ReadCloudNodes(CloudNode *pnodes)
+{
+    CloudNode node = {LOCAL_ADDR, 5001, -1};
+    int i;
+    for (i=0; i<NODES_NUM; i++)
+    {
+        pnodes[i] = node;
+        pnodes[i].port = node.port + i;
+    }
+
+    return 0;
+}
+
+DataBase OpenAllCloudNodes(char *buf)
+{
+    /* establish a connection with server */
+    CloudNode *nodes = malloc(NODES_NUM * sizeof(CloudNode));
+    ReadCloudNodes(nodes);
+    int i;
+    char recvBuf[MAXPACKETLEN];
+    for (i=0; i<NODES_NUM; i++)
+    {
+        if (-1 == OpenRemoteService(&(nodes[i].sock), nodes[i].addr, nodes[i].port))
+        {
+            fprintf(stderr, "Open remote service failed.\n");
+            return NULL;
+        }
+        /* send server the command */
+        SendMsg(nodes[i].sock, buf);
+        RecvMsg(nodes[i].sock, recvBuf); 
+
+        DBPacketHeader *phd = GetHeader(recvBuf);
+        if (phd->cmd == CMDFAIL)
+        {
+            fprintf(stderr, "Receive error:%s\n", GetAppend(phd));
+            return NULL;
+        }
+    }
+
+    return (DataBase)nodes;
+}
+
+int CloseAllCloudNodes(DataBase hdb, char *buf)
+{
+    CloudNode *nodes = (CloudNode *)hdb;
+    int i;
+    char recvBuf[MAXPACKETLEN];
+    for (i=0; i<NODES_NUM; i++)
+    {
+        SendMsg(nodes[i].sock, buf);
+        RecvMsg(nodes[i].sock, recvBuf);
+
+        DBPacketHeader *phd = GetHeader(recvBuf);
+        if (phd->cmd == CMDFAIL)
+        {
+            fprintf(stderr, "Close error:%s\n", GetAppend(phd));
+            return -1;
+        }
+
+        CloseRemoteService(nodes[i].sock);
+    }
+    free(nodes);
+
+    return 0;
+}
+
+/* Get socket by key according to cloud strategy */
+Socket *GetSocket(DataBase hdb, dbKey key)
+{
+    CloudNode *nodes = (CloudNode *)hdb;
+    int index = key % NODES_NUM;
+    //printf("Send to %d:%d\n", index, nodes[index].port);
+    return &(nodes[index].sock);
+}
+
 DataBase DBCreate(char *dbName)
 {
     DBPacketHeader hd;
@@ -29,58 +113,26 @@ DataBase DBCreate(char *dbName)
     WriteHeader(buf, &hd);
     Append(buf, dbName, strlen(dbName) + 1);
     debug(buf);
-
-    /* establish a connection with server */
-    Socket *psock = malloc(sizeof(Socket));
-    if (-1 == OpenRemoteService(psock, NULL))
-    {
-        fprintf(stderr, "Open remote service failed.\n");
-        return NULL;
-    }
-    /* send server the command */
-    SendMsg(*psock, buf);
-    RecvMsg(*psock, buf); 
-
-    DBPacketHeader *phd = GetHeader(buf);
-    if (phd->cmd == CMDFAIL)
-    {
-        fprintf(stderr, "Receive error:%s\n", GetAppend(phd));
-        return NULL;
-    }
-
-    return (DataBase)psock;
+    
+    return OpenAllCloudNodes(buf);
 }
 
 int DBDelete(DataBase hdb)
 {
     DBPacketHeader hd;
     char buf[MAXPACKETLEN];
-    Socket *psock = hdb;
 
     hd.cmd = CLOSE;
     WriteHeader(buf, &hd);
 
-    SendMsg(*psock, buf);
-    RecvMsg(*psock, buf);
-
-    DBPacketHeader *phd = GetHeader(buf);
-    if (phd->cmd == CMDFAIL)
-    {
-        fprintf(stderr, "Close error:%s\n", GetAppend(phd));
-        return -1;
-    }
-
-    CloseRemoteService(*psock);
-    free(psock);
-
-    return 0;
+    return CloseAllCloudNodes(hdb, buf);
 }
 
 int DBSetKeyValue(DataBase hdb, dbKey key, dbValue value)
 {
     DBPacketHeader hd;
     char buf[MAXPACKETLEN];
-    Socket *psock = hdb;
+    Socket *psock = GetSocket(hdb, key);
 
     hd.cmd = SET;
     hd.key = key;
@@ -104,7 +156,7 @@ dbValue DBGetKeyValue(DataBase hdb, dbKey key)
 {
     DBPacketHeader hd;
     char buf[MAXPACKETLEN];
-    Socket *psock = hdb;
+    Socket *psock = GetSocket(hdb, key);
 
     hd.cmd = GET;
     hd.key = key;
@@ -127,7 +179,7 @@ int DBDelKeyValue(DataBase hdb, dbKey key)
 {
     DBPacketHeader hd;
     char buf[MAXPACKETLEN];
-    Socket *psock = hdb;
+    Socket *psock = GetSocket(hdb, key);
 
     hd.cmd = DEL;
     hd.key = key;

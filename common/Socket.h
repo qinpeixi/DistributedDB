@@ -16,6 +16,7 @@
 
 #define PORT                5001
 #define LOCAL_ADDR          "127.0.0.1"
+#define ADDR_STR_LEN        128
 #define MAX_BUF_LEN         1024
 
 typedef int Socket;
