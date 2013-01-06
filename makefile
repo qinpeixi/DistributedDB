@@ -14,6 +14,10 @@ TESTSRC   = $(wildcard ./test/*.c)
 TESTOBJ   = $(TESTSRC:.c=.o) ./server/tcDB.o ./common/dbProtocol.o ./server/MemoryDB.o \
 		./server/CircularQueue.o
 
+TESTGROUP = slave master
+SLAVEOBJ  = ./common/dbProtocol.o ./client/clientsocket.o ./server/slave.o
+MASTEROBJ = ./common/dbProtocol.o ./server/serversocket.o ./server/master.o ./server/MemoryDB.o
+
 RUBBISHFILES = find . -regex '.*\.gch\|.*~\|.*\..*db' -type f
 
 all: $(TARGET)
@@ -36,11 +40,17 @@ test:   $(TESTOBJ)
 	$(ECHO) $(CXX) -o ./test/testCircularQueue ./test/testCircularQueue.o ./server/CircularQueue.o
 	$(ECHO) ./test/testCircularQueue
 
+testgroup: $(TESTGROUP)
+slave:	$(SLAVEOBJ)
+	$(ECHO) $(CXX) -o $@ $^
+master: $(MASTEROBJ)
+	$(ECHO) $(CXX) -o $@ $^ -ltokyocabinet
+
 .c.o:
 	$(ECHO) $(CXX) -c $(CXXFLAGS) $< -o $@
 
 clean:
-	@$(RM) $(CLIENTOBJ) $(SERVEROBJ) $(TARGET)
+	@$(RM) $(CLIENTOBJ) $(SERVEROBJ) $(TARGET) $(TESTGROUP)
 	@$(RM) -r ./server1 ./server2/ ./server3/
 	@$(RUBBISHFILES) | xargs $(RM)
 	@$(RM) *.o

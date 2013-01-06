@@ -32,8 +32,27 @@
 
 #define MAXPACKETLEN 1024
 #define APPENDSIZE (MAXPACKETLEN - sizeof(DBPacketHeader))
-enum CMD {SET,   GET,   DEL,   OPEN,   CLOSE,   QUIT,  HELP,
-          SET_R, GET_R, DEL_R, OPEN_R, CLOSE_R, QUIT_R, CMDFAIL};
+enum CMD {
+    // DB operations
+    SET,   GET,   DEL,   OPEN,   CLOSE,   QUIT,  HELP,
+    SET_R, GET_R, DEL_R, OPEN_R, CLOSE_R, QUIT_R, CMDFAIL,
+
+    // Commands used for server controlling
+    //
+    // client to master
+    GET_LIST,   GET_LIST_R, 
+    // slave to master
+    ADD_SLAVE,   DEL_SLAVE,   
+    ADD_SLAVE_R, DEL_SLAVE_R, 
+    HEARTBEAT,    
+    // master to slave
+    NEW_SLAVE,   RMV_SLAVE,
+    NEW_SLAVE_R, RMV_SLAVE_R, 
+    // slave to slave
+    CLIP_DATA,   BACKUP,    
+    CLIP_DATA_R, BACKUP_R,    
+    UPDATE_BACKUP
+};
 
 typedef struct 
 {

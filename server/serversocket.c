@@ -39,7 +39,7 @@ int InitializeService(Socket *psockfd, char *addr, int port)
     memset(&sa.sin_zero, 0, 8);
 
     int res;
-    
+
     res = bind(*psockfd, (struct sockaddr *)&sa, sizeof(sa));
     if (res != 0)
     {
@@ -64,7 +64,7 @@ void ShutdownService(Socket sockfd)
     MDBClose(MDB);
     close(sockfd);
 }
-    
+
 ClientSockHandle ServiceStart(Socket sockfd)
 {
     struct sockaddr_in sa;
