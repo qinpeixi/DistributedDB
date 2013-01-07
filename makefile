@@ -42,7 +42,7 @@ test:   $(TESTOBJ)
 
 testgroup: $(TESTGROUP)
 slave:	$(SLAVEOBJ)
-	$(ECHO) $(CXX) -o $@ $^
+	$(ECHO) $(CXX) -o $@ $^ -lpthread
 master: $(MASTEROBJ)
 	$(ECHO) $(CXX) -o $@ $^ -ltokyocabinet
 

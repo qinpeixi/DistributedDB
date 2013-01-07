@@ -141,9 +141,9 @@ void HandleRequest(int id)
             free(strAppend);
         }
 
-        SendMsg(hcsock, szReplyMsg);
+        DBSendMsg(hcsock, szReplyMsg);
 
         if (sendhd.cmd == CLOSE_R)
-            ServiceStop(hcsock.sock); 
+            DBServiceStop(hcsock.sock); 
     }
 }

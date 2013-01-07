@@ -21,7 +21,7 @@
 
 int main(int argc, char *argv[])
 {
-    Socket listensock;
+    int listensock;
     int epollid;
     struct epoll_event event;
     char szBuf[MAX_BUF_LEN] = "\0";
@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
         exit(-1);
     }
 
-    if (-1 == InitializeService(&listensock, argv[1], atoi(argv[2])))
+    if (-1 == DBInitializeService(&listensock, argv[1], atoi(argv[2])))
         return -1;
     InitQueue(); // message queue is shared by all threads
     sem_init(&MSG_SEM, 0, 0); // also shared by all threads
@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
         if (event.data.fd == listensock)
         {
             ClientSockHandle hcsock;
-            hcsock = ServiceStart(listensock);
+            hcsock = DBServiceStart(listensock);
             if (hcsock.sock == -1)
                 continue;
 
@@ -59,12 +59,12 @@ int main(int argc, char *argv[])
         }
         else if ((event.events & EPOLLIN) && (event.events & EPOLLRDHUP))
         {
-            ServiceStop(event.data.fd);
+            DBServiceStop(event.data.fd);
         }
         else
         {
             ClientSockHandle *phcsock;
-            phcsock = RecvMsg(event.data.fd, szBuf);
+            phcsock = DBRecvMsg(event.data.fd, szBuf);
 
             QueueNode qn;
             qn.hcsock = *phcsock;
@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
 
     sem_destroy(&MSG_SEM);
     KillThreads();
-    ShutdownService(listensock);
+    DBShutdownService(listensock);
 
     return 0;
 }

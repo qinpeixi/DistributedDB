@@ -17,15 +17,15 @@
 #include <stdlib.h>
 #include "../common/Database.h"
 #include "../common/dbProtocol.h"
-#include "clientsocket.h"
+#include "../common/Socket.h"
 
 #define NODES_NUM 3 
 
 typedef struct 
 {
-    char addr[ADDR_STR_LEN];
+    char addr[MAX_STRADDR_LEN];
     int port;
-    Socket sock;
+    int sock;
 } CloudNode;
 
 int ReadCloudNodes(CloudNode *pnodes)
@@ -95,7 +95,7 @@ int CloseAllCloudNodes(DataBase hdb, char *buf)
 }
 
 /* Get socket by key according to cloud strategy */
-Socket *GetSocket(DataBase hdb, dbKey key)
+int *GetSocket(DataBase hdb, dbKey key)
 {
     CloudNode *nodes = (CloudNode *)hdb;
     int index = key % NODES_NUM;
@@ -132,7 +132,7 @@ int DBSetKeyValue(DataBase hdb, dbKey key, dbValue value)
 {
     DBPacketHeader hd;
     char buf[MAXPACKETLEN];
-    Socket *psock = GetSocket(hdb, key);
+    int *psock = GetSocket(hdb, key);
 
     hd.cmd = SET;
     hd.key = key;
@@ -156,7 +156,7 @@ dbValue DBGetKeyValue(DataBase hdb, dbKey key)
 {
     DBPacketHeader hd;
     char buf[MAXPACKETLEN];
-    Socket *psock = GetSocket(hdb, key);
+    int *psock = GetSocket(hdb, key);
 
     hd.cmd = GET;
     hd.key = key;
@@ -179,7 +179,7 @@ int DBDelKeyValue(DataBase hdb, dbKey key)
 {
     DBPacketHeader hd;
     char buf[MAXPACKETLEN];
-    Socket *psock = GetSocket(hdb, key);
+    int *psock = GetSocket(hdb, key);
 
     hd.cmd = DEL;
     hd.key = key;

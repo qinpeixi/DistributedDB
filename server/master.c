@@ -18,7 +18,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include "ServerCtrl.h"
-#include "serversocket.h"
+#include "../common/Socket.h"
 #include "../common/dbProtocol.h"
 
 SlaveList slaves;
@@ -41,7 +41,7 @@ int FindLongestSection()
 }
 
 // add a new slave to slaves, return the index of the new slave
-int AddToSlaveList(char *addr, int port, Socket sock)
+int AddToSlaveList(int ip, int port, int sock)
 {
     int i;
     int pos = FindLongestSection();
@@ -50,7 +50,7 @@ int AddToSlaveList(char *addr, int port, Socket sock)
         slaves.nodes[i+1] = slaves.nodes[i];
 
     int newpos = pos + 1;
-    slaves.nodes[newpos].ip = inet_addr(addr);
+    slaves.nodes[newpos].ip = ip;
     slaves.nodes[newpos].port = port;
     slaves.nodes[newpos].sock = sock;
     slaves.nodes[newpos].key = (slaves.nodes[newpos+1].key + slaves.nodes[pos].key) / 2;
@@ -63,30 +63,35 @@ int AddToSlaveList(char *addr, int port, Socket sock)
 void NotifyAll(int newpos)
 {
     char szBuf[MAX_BUF_LEN] = "\0";
+    char szReplyMsg[MAX_BUF_LEN] = "\0";
     DBPacketHeader hd;
     hd.cmd = NEW_SLAVE;
     hd.key = newpos;
     WriteHeader(szBuf, &hd);
     Append(szBuf, (char *)&(slaves.nodes[newpos]), sizeof(SlaveNode));
     int i;
-    ClientSockHandle hc;
+    int sock;
     for (i=1; i<slaves.num-1; i++)
     {
         if (i == newpos)
             continue;
-        hc.sock = slaves.nodes[i].sock;
-        SendMsg(hc, szBuf);
+        sock = slaves.nodes[i].sock;
+        SendMsg(sock, szBuf);
+        RecvMsg(sock, szReplyMsg);
+        DBPacketHeader *phd = (DBPacketHeader *)szReplyMsg;
+        if (phd->cmd != NEW_SLAVE_R)
+            fprintf(stderr, "Receive NEW_SLAVE_R error.\n");
     }
 }
 
-void HandleRequest(ClientSockHandle hcsock)
+void HandleRequest(int sock, int ip)
 {
     char szBuf[MAX_BUF_LEN] = "\0";
     char szReplyMsg[MAX_BUF_LEN] = "\0";
     DBPacketHeader *phd;
     DBPacketHeader hd;
 
-    RecvMsg(hcsock.sock, szBuf);
+    RecvMsg(sock, szBuf);
     phd = (DBPacketHeader *)szBuf;
     debug(szBuf);
 
@@ -101,9 +106,9 @@ void HandleRequest(ClientSockHandle hcsock)
             }
         case ADD_SLAVE:
             {
-                int newpos = AddToSlaveList(hcsock.addr, phd->key, hcsock.sock);
+                int newpos = AddToSlaveList(ip, phd->key, sock);
                 printslaves(slaves);
-                //NotifyAll(newpos);
+                NotifyAll(newpos);
                 hd.cmd = ADD_SLAVE_R;
                 hd.key = newpos;
                 WriteHeader(szReplyMsg, &hd);
@@ -120,16 +125,17 @@ void HandleRequest(ClientSockHandle hcsock)
             }
     }
 
-    SendMsg(hcsock, szReplyMsg);
+    SendMsg(sock, szReplyMsg);
 
     if (phd->cmd != ADD_SLAVE)
-        ServiceStop(hcsock.sock);
+        ServiceStop(sock);
 }
 
-int main(int argc, char *argv[])
+int main1(int argc, char *argv[])
 {
-    Socket listensock;
-    ClientSockHandle hcsock;
+    int listensock;
+    int acsock;
+    int ip;
     //pthread_t heart_thread_id;
 
     if (argc != 3)
@@ -151,9 +157,9 @@ int main(int argc, char *argv[])
 
     while (1)
     {
-        hcsock = ServiceStart(listensock);
-        if (hcsock.sock != -1)
-            HandleRequest(hcsock);
+        acsock = ServiceStart(listensock, &acsock, &ip);
+        if (acsock != -1)
+            HandleRequest(acsock, ip);
     }
 
     ShutdownService(listensock);

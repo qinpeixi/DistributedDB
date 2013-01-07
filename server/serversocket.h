@@ -16,25 +16,24 @@
 
 #include "../common/Socket.h"
 
-#define MAX_CONNECT_QUEUE   5
-#define MAX_STRADDR_LEN     50
 
 typedef struct 
 {
-    Socket sock;
-    char addr[MAX_STRADDR_LEN];
+    int sock;
+    //char addr[MAX_STRADDR_LEN];
+    int ip;
     void *app; // to take sth with socket
 } ClientSockHandle;
 
-int InitializeService(Socket *sockfd, char *addr, int port);
+int DBInitializeService(int *sockfd, char *addr, int port);
 
-void ShutdownService(Socket sockfd);
+void DBShutdownService(int sockfd);
 
-ClientSockHandle ServiceStart(Socket sockfd);
+ClientSockHandle DBServiceStart(int sockfd);
 
-void ServiceStop(Socket sockfd);
+void DBServiceStop(int sockfd);
 
-void SendMsg(ClientSockHandle hcsock, char *buf);
+void DBSendMsg(ClientSockHandle hcsock, char *buf);
 
-ClientSockHandle *RecvMsg(Socket sockfd, char *buf);
+ClientSockHandle *DBRecvMsg(int sockfd, char *buf);
 #endif

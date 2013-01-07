@@ -14,26 +14,69 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 #include <assert.h>
 #include "ServerCtrl.h"
 #include "../common/dbProtocol.h"
-#include "../client/clientsocket.h"
+#include "../common/Socket.h"
 
 SlaveList slaves;
 int pos;  // This server's position in slaves.
-Socket mastersock;
 char *addr;
 int port;
 
-void RegisterAndLoadSlaves(Socket sockfd)
+void AddNewSlave(int pos, SlaveNode sn)
+{
+    int i;
+    printf("slaves: num:%d pos:%d\n", slaves.num, pos);
+    for (i=slaves.num-1; i>=pos; i--)
+        slaves.nodes[i+1] = slaves.nodes[i];
+    slaves.nodes[pos] = sn;
+    slaves.num ++;
+    slaves.version ++;
+}
+
+void HandleCtrlRequest(int mastersock)
+{
+    char szBuf[MAX_BUF_LEN] = "\0";
+    DBPacketHeader *phd;
+    DBPacketHeader hd;
+
+    while (1)
+    {
+        RecvMsg(mastersock, szBuf);
+        phd = (DBPacketHeader *)szBuf;
+
+        switch (phd->cmd)
+        {
+            case NEW_SLAVE:
+                {
+                    AddNewSlave(phd->key, *(SlaveNode *)GetAppend(phd));
+                    printslaves(slaves);
+                    hd.cmd = NEW_SLAVE_R;
+                    WriteHeader(szBuf, &hd);
+                    SendMsg(mastersock, szBuf);
+                    break;
+                }
+            case RM_SLAVE:
+                {
+                }
+            default:
+                {
+                }
+        }
+    }
+}
+
+void RegisterAndLoadSlaves(int mastersock)
 {
     DBPacketHeader hd;
     char szBuf[MAX_BUF_LEN] = "\0";
     hd.cmd = ADD_SLAVE;
     hd.key = port;
     WriteHeader(szBuf, &hd);
-    SendMsg(sockfd, szBuf);
-    RecvMsg(sockfd, szBuf);
+    SendMsg(mastersock, szBuf);
+    RecvMsg(mastersock, szBuf);
     DBPacketHeader *phd = (DBPacketHeader *)szBuf;
     assert(phd->cmd == ADD_SLAVE_R);
     pos = phd->key;
@@ -41,9 +84,10 @@ void RegisterAndLoadSlaves(Socket sockfd)
     printslaves(slaves);
 }
 
-int main(int argc, char *argv[])
+int main2(int argc, char *argv[])
 {
-    //Socket sockfd;
+    int mastersock;
+    pthread_t ctrl_thread_id;
 
     if (argc != 3)
     {
@@ -58,6 +102,11 @@ int main(int argc, char *argv[])
         return -1;
     
     RegisterAndLoadSlaves(mastersock);
+
+    pthread_create(&ctrl_thread_id, NULL, (void*)HandleCtrlRequest, (void*)mastersock);
+
+    while (1)
+        ;  // DB operating
 
     return 0;
 }

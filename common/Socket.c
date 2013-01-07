@@ -1,33 +1,91 @@
 /*************************************************************************/
 /* Copyright (C) Network Programming -USTC, 2012                         */
 /*                                                                       */
-/*  File Name              :  client/clientsocket.c                      */
+/*  File Name              :  common/Socket.c                            */
 /*  Pricipal Author        :  qinpxi                                     */
 /*  Subsystem Name         :                                             */
 /*  Module Name            :                                             */
 /*  Language               :                                             */
 /*  Target Environment     :                                             */
-/*  Created Time           :  Mon 24 Dec 2012 08:58:09 AM CST            */
+/*  Created Time           :  Mon 07 Jan 2013 08:05:13 PM CST            */
 /*  Description            :                                             */
 /*************************************************************************/
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <unistd.h>
 #include <assert.h>
-#include "clientsocket.h"
+#include "Socket.h"
 
-int OpenRemoteService(Socket *psockfd, char *addr, int port)
+int InitializeService(int *listen_sock, char *addr, int port)
+{
+    struct sockaddr_in sa;
+
+    *listen_sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (*listen_sock == -1)
+    {
+        perror("socket");
+        return -1;
+    }
+
+    sa.sin_family = AF_INET;
+    sa.sin_port = htons(port);
+    sa.sin_addr.s_addr = addr ? inet_addr(addr) : INADDR_ANY;
+    memset(&sa.sin_zero, 0, 8);
+
+    int res;
+
+    res = bind(*listen_sock, (struct sockaddr *)&sa, sizeof(sa));
+    if (res != 0)
+    {
+        perror("bind");
+        return -1;
+    }
+
+    res = listen(*listen_sock, MAX_CONNECT_QUEUE);
+    if (res != 0)
+    {
+        perror("listen");
+        return -1;
+    }
+
+    return 0;
+}
+
+void ShutdownService(int listen_sock)
+{
+    close(listen_sock);
+}
+
+int ServiceStart(int listen_sock, int *accept_sock, int *ip)
+{
+    struct sockaddr_in sa;
+    socklen_t len = sizeof(struct sockaddr);
+    *accept_sock = accept(listen_sock, (struct sockaddr *)&sa, &len);
+    if (*accept_sock == -1)
+    {
+        perror("accept");
+        return -1;
+    }
+    *ip = *(int*)&sa.sin_addr;
+    return 0;
+}
+
+void ServiceStop(int sockfd)
+{
+    close(sockfd);
+}
+
+int OpenRemoteService(int *psockfd, char *addr, int port)
 {
     struct sockaddr_in sa;
 
     *psockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (*psockfd == -1)
     {
-        perror("socket");
+        perror("int");
         return -1;
     }
 
@@ -48,12 +106,12 @@ int OpenRemoteService(Socket *psockfd, char *addr, int port)
     return 0;
 }
 
-void CloseRemoteService(Socket sockfd)
+void CloseRemoteService(int sockfd)
 {
     close(sockfd);
 }
 
-void SendMsg(Socket sockfd, char *buf)
+void SendMsg(int sockfd, char *buf)
 {
     assert(sockfd != -1);
     int res = send(sockfd, buf, MAX_BUF_LEN, 0);
@@ -61,7 +119,7 @@ void SendMsg(Socket sockfd, char *buf)
         perror("send");
 }
 
-void RecvMsg(Socket sockfd, char *buf)
+void RecvMsg(int sockfd, char *buf)
 {
     assert(sockfd != -1);
     int res = recv(sockfd, buf, MAX_BUF_LEN, 0);
