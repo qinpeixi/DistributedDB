@@ -117,6 +117,11 @@ void HandleRequest(int sock, int ip)
             }
         case DEL_SLAVE:
             {
+                // DelFromSlaveList(phd->key);
+                // printslaves(slaves);
+                // NotifyAll(phd->key);(RM_SLAVE)
+                // hd.cmd = DEL_SLAVE_R
+                // WriteHeader(szReplyMsg, &hd);
                 break;
             }
         default:
@@ -131,20 +136,14 @@ void HandleRequest(int sock, int ip)
         ServiceStop(sock);
 }
 
-int main1(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     int listensock;
     int acsock;
     int ip;
     //pthread_t heart_thread_id;
 
-    if (argc != 3)
-    {
-        printf("Address and port is needed.\n");
-        exit(-1);
-    }
-
-    if (-1 == InitializeService(&listensock, argv[1], atoi(argv[2])))
+    if (-1 == InitializeService(&listensock, NULL, 0))
         return -1;
 
     // guard elements, not corresbonding to any real slaves
@@ -157,7 +156,7 @@ int main1(int argc, char *argv[])
 
     while (1)
     {
-        acsock = ServiceStart(listensock, &acsock, &ip);
+        ServiceStart(listensock, &acsock, &ip);
         if (acsock != -1)
             HandleRequest(acsock, ip);
     }

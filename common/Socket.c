@@ -50,6 +50,10 @@ int InitializeService(int *listen_sock, char *addr, int port)
         perror("listen");
         return -1;
     }
+    struct sockaddr_in sin;
+    socklen_t len = sizeof(sin);
+    getsockname(*listen_sock, (struct sockaddr *)&sin, &len);
+    printf("%s:%d\n", inet_ntoa(sin.sin_addr), ntohs(sin.sin_port));
 
     return 0;
 }
@@ -69,7 +73,9 @@ int ServiceStart(int listen_sock, int *accept_sock, int *ip)
         perror("accept");
         return -1;
     }
+
     *ip = *(int*)&sa.sin_addr;
+    printf("accept from:%s\n", inet_ntoa(sa.sin_addr));
     return 0;
 }
 
@@ -125,4 +131,14 @@ void RecvMsg(int sockfd, char *buf)
     int res = recv(sockfd, buf, MAX_BUF_LEN, 0);
     if (res == -1)
         perror("receive");
+}
+
+int GetPort(int sockfd)
+{
+    struct sockaddr_in sin;
+    socklen_t len = sizeof(sin);
+    getsockname(sockfd, (struct sockaddr *)&sin, &len);
+    printf("%s:%d\n", inet_ntoa(sin.sin_addr), ntohs(sin.sin_port));
+
+    return ntohs(sin.sin_port);
 }

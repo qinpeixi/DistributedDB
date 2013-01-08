@@ -15,8 +15,8 @@ TESTOBJ   = $(TESTSRC:.c=.o) ./server/tcDB.o ./common/dbProtocol.o ./server/Memo
 		./server/CircularQueue.o
 
 TESTGROUP = slave master
-SLAVEOBJ  = ./common/dbProtocol.o ./client/clientsocket.o ./server/slave.o
-MASTEROBJ = ./common/dbProtocol.o ./server/serversocket.o ./server/master.o ./server/MemoryDB.o
+SLAVEOBJ  = ./common/dbProtocol.o ./common/Socket.o ./server/slave.o
+MASTEROBJ = ./common/dbProtocol.o ./common/Socket.o ./server/master.o
 
 RUBBISHFILES = find . -regex '.*\.gch\|.*~\|.*\..*db' -type f
 
