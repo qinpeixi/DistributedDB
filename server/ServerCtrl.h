@@ -17,6 +17,7 @@
 #include <stdio.h>
 
 #define MAX_SLAVE_NUM 32
+#define MAX_KEY       1000
 
 typedef struct
 {

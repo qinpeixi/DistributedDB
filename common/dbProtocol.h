@@ -49,8 +49,8 @@ enum CMD {
     NEW_SLAVE,   RM_SLAVE,
     NEW_SLAVE_R, RM_SLAVE_R, 
     // slave to slave
-    CLIP_DATA,   BACKUP,    
-    CLIP_DATA_R, BACKUP_R,    
+    CLIP_DATA,   BACKUP,    FILETRANS,
+    CLIP_DATA_R, BACKUP_R,  FILETRANS_R,
     UPDATE_BACKUP
 };
 

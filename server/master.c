@@ -23,16 +23,24 @@
 
 SlaveList slaves;
 
+int GetLength(int pos)
+{
+    int len = slaves.nodes[(pos+1)%slaves.num].key - slaves.nodes[pos].key;
+    len = (len + MAX_KEY - 1) % MAX_KEY + 1;
+    return len;
+}
+
 int FindLongestSection()
 {
     int i;
     int maxlen = -1;
     int index = -1;
-    for (i=0; i<slaves.num-1; i++)
+    for (i=0; i<slaves.num; i++)
     {
-        if (maxlen < slaves.nodes[i+1].key - slaves.nodes[i].key)
+        int len = GetLength(i);
+        if (maxlen < len)
         {
-            maxlen = slaves.nodes[i+1].key - slaves.nodes[i].key;
+            maxlen = len;
             index = i;
         }
     }
@@ -41,22 +49,31 @@ int FindLongestSection()
 }
 
 // add a new slave to slaves, return the index of the new slave
-int AddToSlaveList(int ip, int port, int sock)
+int AddToSlaveList(SlaveNode sn)
 {
-    int i;
-    int pos = FindLongestSection();
+    int newpos;
+    if (slaves.num == 0)
+    {
+        srand(time(0));
+        sn.key = rand() % MAX_KEY;
+        slaves.nodes[0] = sn;
+        newpos = 0;
+    }
+    else
+    {
+        int i;
+        int pos = FindLongestSection();
 
-    for (i=slaves.num-1; i>pos; i--)
-        slaves.nodes[i+1] = slaves.nodes[i];
+        for (i=slaves.num-1; i>pos; i--)
+            slaves.nodes[i+1] = slaves.nodes[i];
 
-    int newpos = pos + 1;
-    slaves.nodes[newpos].ip = ip;
-    slaves.nodes[newpos].port = port;
-    slaves.nodes[newpos].sock = sock;
-    slaves.nodes[newpos].key = (slaves.nodes[newpos+1].key + slaves.nodes[pos].key) / 2;
+        newpos = pos + 1;
+        sn.key = (GetLength(pos)/2 + slaves.nodes[pos].key) % MAX_KEY;
+        slaves.nodes[newpos] = sn;
+    }
+
     slaves.version ++;
     slaves.num ++;
-
     return newpos;
 }
 
@@ -71,7 +88,7 @@ void NotifyAll(int newpos)
     Append(szBuf, (char *)&(slaves.nodes[newpos]), sizeof(SlaveNode));
     int i;
     int sock;
-    for (i=1; i<slaves.num-1; i++)
+    for (i=0; i<slaves.num; i++)
     {
         if (i == newpos)
             continue;
@@ -106,7 +123,8 @@ void HandleRequest(int sock, int ip)
             }
         case ADD_SLAVE:
             {
-                int newpos = AddToSlaveList(ip, phd->key, sock);
+                SlaveNode sn = {ip, phd->key, sock};
+                int newpos = AddToSlaveList(sn);
                 printslaves(slaves);
                 NotifyAll(newpos);
                 hd.cmd = ADD_SLAVE_R;
@@ -146,12 +164,7 @@ int main(int argc, char *argv[])
     if (-1 == InitializeService(&listensock, NULL, 0))
         return -1;
 
-    // guard elements, not corresbonding to any real slaves
-    slaves.nodes[0].key = 0;
-    slaves.nodes[0].sock = -1;
-    slaves.nodes[1].key = 65536;
-    slaves.nodes[1].sock = -1;
-    slaves.num = 2;
+    slaves.num = 0;
     slaves.version = 0;
 
     while (1)

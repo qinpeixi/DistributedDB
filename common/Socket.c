@@ -112,6 +112,11 @@ int OpenRemoteService(int *psockfd, char *addr, int port)
     return 0;
 }
 
+int OpenRemoteService2(int *psockfd, int ip, int port)
+{
+    return OpenRemoteService(psockfd, inet_ntoa(*(struct in_addr *)&ip), port);
+}
+
 void CloseRemoteService(int sockfd)
 {
     close(sockfd);

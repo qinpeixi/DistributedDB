@@ -29,6 +29,10 @@ int listen_sock;
 char *addr;
 int port;
 
+void Send(enum CMD cmd, int key, char *buf)
+{
+}
+
 void AddNewSlave(int pos, SlaveNode sn)
 {
     int i;
@@ -78,6 +82,52 @@ void HandleMasterRequest(int master_sock)
 
 }
 
+// first send file name (Append in dbProtocol) and 
+// the size of the file (key in DBPacketHeader), 
+// then the file content
+void SendFile(int accept_sock)
+{
+    char filename[] = "a.db";
+    FILE *fp = fopen(filename, "r");
+    fseek(fp, 0, SEEK_END);
+    int flen = ftell(fp);
+    char szBuf[MAX_BUF_LEN] = "\0";
+    DBPacketHeader hd;
+    hd.cmd = CLIP_DATA_R;
+    hd.key = flen;
+    WriteHeader(szBuf, &hd);
+    Append(szBuf, filename, sizeof(filename));
+    printf("length of filename:%d\n", sizeof(filename));
+    SendMsg(accept_sock, szBuf);
+
+    RecvMsg(accept_sock, szBuf);
+    DBPacketHeader *phd = (DBPacketHeader *)szBuf;
+    if (phd->cmd != FILETRANS_R)
+    {
+        fprintf(stderr, "File info transfer failed.\n");
+        return;
+    }
+
+    fseek(fp, 0, SEEK_SET);
+    int finish_size = 0;
+    while (finish_size < flen)
+    {
+        hd.cmd = FILETRANS;
+        hd.key = fread(GetAppend(phd), sizeof(char), 
+                MAX_BUF_LEN - sizeof(DBPacketHeader), fp);
+        WriteHeader(szBuf, &hd);
+        SendMsg(accept_sock, szBuf);
+
+        RecvMsg(accept_sock, szBuf);
+        if (phd->cmd != FILETRANS_R)
+        {
+            fprintf(stderr, "File transfer failed.\n");
+            return;
+        }
+        finish_size += hd.key;
+    }
+}
+
 void HandleSlaveRequest()
 {
     int accept_sock;
@@ -98,7 +148,8 @@ void HandleSlaveRequest()
                 // find the key the new slave uses
                 // send all of the data after key (CLIP_DATA_R)
                 // store the sended data into backup1
-                // ServiceStop();
+                SendFile(accept_sock);
+                ServiceStop(accept_sock);
             }
         case BACKUP:
             {
@@ -145,18 +196,70 @@ void HandleCtrlRequest(int master_sock)
 
 void RegisterAndLoadSlaves(int master_sock)
 {
-    DBPacketHeader hd;
     char szBuf[MAX_BUF_LEN] = "\0";
+    DBPacketHeader hd;
     hd.cmd = ADD_SLAVE;
     hd.key = port;
     WriteHeader(szBuf, &hd);
     SendMsg(master_sock, szBuf);
+
     RecvMsg(master_sock, szBuf);
     DBPacketHeader *phd = (DBPacketHeader *)szBuf;
     assert(phd->cmd == ADD_SLAVE_R);
     pos = phd->key;
     slaves = *(SlaveList *)GetAppend(phd);
     printslaves(slaves);
+}
+
+
+int ClipDataFromPre()
+{
+    int prepos = (pos - 1 + slaves.num) % slaves.num;
+    SlaveNode pre_slave = slaves.nodes[prepos];
+
+    if (-1 == OpenRemoteService2(&pre_slave.sock, 
+                pre_slave.ip, pre_slave.port))
+    {
+        fprintf(stderr, "Connet to slave:%d failed.\n", prepos);
+        return -1;
+    }
+
+    char szBuf[MAX_BUF_LEN] = "\0";
+    DBPacketHeader hd;
+    hd.cmd = CLIP_DATA;
+    WriteHeader(szBuf, &hd);
+    SendMsg(pre_slave.sock, szBuf);
+    RecvMsg(pre_slave.sock, szBuf);
+    DBPacketHeader *phd = (DBPacketHeader *)szBuf;
+    assert(phd->cmd == CLIP_DATA_R);
+
+    FILE *fp = fopen(GetAppend(phd), "w");
+    int total_size = phd->key;
+    hd.cmd = FILETRANS_R;
+    WriteHeader(szBuf, &hd);
+    SendMsg(pre_slave.sock, szBuf);
+
+    int finish_size = 0;
+    while (finish_size < total_size)
+    {
+        RecvMsg(pre_slave.sock, szBuf);
+        phd = (DBPacketHeader *)szBuf;
+        // write GetAppend(phd) into file;
+        int write_len = fwrite(GetAppend(phd), sizeof(char), phd->key, fp);
+        if (write_len < phd->key)
+        {
+            fprintf(stderr, "Write data to file failed.\n");
+            return -1;
+        }
+        finish_size += phd->key;
+
+        hd.cmd = FILETRANS_R;
+        WriteHeader(szBuf, &hd);
+        SendMsg(pre_slave.sock, szBuf);
+    } 
+    fclose(fp);
+
+    return 0;
 }
 
 int main(int argc, char *argv[])
@@ -175,10 +278,14 @@ int main(int argc, char *argv[])
         return -1;
 
     RegisterAndLoadSlaves(master_sock);
-    // Clip data from predecessor
-    // Notify 2nd-predecessor UPDATE_BACKUP
-    // Backup data for successor and 2nd-successor
-
+    if (slaves.num != 1)
+    {
+        // Clip data from predecessor
+        if (-1 == ClipDataFromPre())
+            return -1;
+        // Notify 2nd-predecessor UPDATE_BACKUP
+        // Backup data for successor and 2nd-successor
+    }
 
     pthread_create(&ctrl_thread_id, NULL, (void*)HandleCtrlRequest, (void*)master_sock);
 

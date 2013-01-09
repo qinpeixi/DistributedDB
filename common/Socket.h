@@ -32,6 +32,10 @@ void ServiceStop(int sockfd);
 
 int OpenRemoteService(int *sockfd, char *addr, int port);
 
+int OpenRemoteService2(int *psockfd, int ip, int port);
+
+int OpenRemoteService2(int *psockfd, int ip, int port);
+
 void CloseRemoteService(int sockfd);
 
 void SendMsg(int sockfd, char *buf);

@@ -20,7 +20,8 @@ MASTEROBJ = ./common/dbProtocol.o ./common/Socket.o ./server/master.o
 
 RUBBISHFILES = find . -regex '.*\.gch\|.*~\|.*\..*db' -type f
 
-all: $(TARGET)
+#all: $(TARGET)
+all: $(TESTGROUP)
 ddbclient: $(CLIENTOBJ)
 	$(ECHO) $(CXX) -o $@ $^
 ddbserver: $(SERVEROBJ)
@@ -45,6 +46,10 @@ slave:	$(SLAVEOBJ)
 	$(ECHO) $(CXX) -o $@ $^ -lpthread
 master: $(MASTEROBJ)
 	$(ECHO) $(CXX) -o $@ $^ -ltokyocabinet
+	$(ECHO) mkdir server1 server2 server3
+	$(ECHO) cp slave ./server1/
+	$(ECHO) cp slave ./server2/
+	$(ECHO) cp slave ./server3/
 
 .c.o:
 	$(ECHO) $(CXX) -c $(CXXFLAGS) $< -o $@
