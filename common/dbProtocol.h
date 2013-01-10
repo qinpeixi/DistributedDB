@@ -51,7 +51,8 @@ enum CMD {
     // slave to slave
     CLIP_DATA,   BACKUP,    FILETRANS,
     CLIP_DATA_R, BACKUP_R,  FILETRANS_R,
-    UPDATE_BACKUP
+    UPDATE_BACKUP2,
+    UPDATE_BACKUP2_R
 };
 
 typedef struct 
@@ -86,7 +87,7 @@ DBPacketHeader *GetHeader(char *buf);
  * in/out	: None
  * return	: SUCCESS(0)/exit(-1)
  */
-int Append(char *buf, char *data, int len);
+int Append(char *buf, const char *data, int len);
 
 /*
  * Get the appended content from buf

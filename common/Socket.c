@@ -22,8 +22,11 @@
 int InitializeService(int *listen_sock, char *addr, int port)
 {
     struct sockaddr_in sa;
+    int opt = 1;
+    socklen_t len = sizeof(opt);
 
     *listen_sock = socket(AF_INET, SOCK_STREAM, 0);
+    setsockopt(*listen_sock, SOL_SOCKET, SO_REUSEADDR, &opt, len);
     if (*listen_sock == -1)
     {
         perror("socket");
@@ -51,7 +54,7 @@ int InitializeService(int *listen_sock, char *addr, int port)
         return -1;
     }
     struct sockaddr_in sin;
-    socklen_t len = sizeof(sin);
+    len = sizeof(sin);
     getsockname(*listen_sock, (struct sockaddr *)&sin, &len);
     printf("%s:%d\n", inet_ntoa(sin.sin_addr), ntohs(sin.sin_port));
 
@@ -143,7 +146,7 @@ int GetPort(int sockfd)
     struct sockaddr_in sin;
     socklen_t len = sizeof(sin);
     getsockname(sockfd, (struct sockaddr *)&sin, &len);
-    printf("%s:%d\n", inet_ntoa(sin.sin_addr), ntohs(sin.sin_port));
+    //printf("%s:%d\n", inet_ntoa(sin.sin_addr), ntohs(sin.sin_port));
 
     return ntohs(sin.sin_port);
 }

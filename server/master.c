@@ -107,6 +107,7 @@ void HandleRequest(int sock, int ip)
     char szReplyMsg[MAX_BUF_LEN] = "\0";
     DBPacketHeader *phd;
     DBPacketHeader hd;
+    printf("HandleRequest.\n");
 
     RecvMsg(sock, szBuf);
     phd = (DBPacketHeader *)szBuf;
@@ -161,7 +162,7 @@ int main(int argc, char *argv[])
     int ip;
     //pthread_t heart_thread_id;
 
-    if (-1 == InitializeService(&listensock, NULL, 0))
+    if (-1 == InitializeService(&listensock, NULL, 5001))
         return -1;
 
     slaves.num = 0;

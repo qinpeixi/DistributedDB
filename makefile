@@ -18,7 +18,7 @@ TESTGROUP = slave master
 SLAVEOBJ  = ./common/dbProtocol.o ./common/Socket.o ./server/slave.o
 MASTEROBJ = ./common/dbProtocol.o ./common/Socket.o ./server/master.o
 
-RUBBISHFILES = find . -regex '.*\.gch\|.*~\|.*\..*db' -type f
+RUBBISHFILES = find . -regex '.*\.gch\|.*~\|.*\..*db\|.*\.bac' -type f
 
 #all: $(TARGET)
 all: $(TESTGROUP)
@@ -26,7 +26,7 @@ ddbclient: $(CLIENTOBJ)
 	$(ECHO) $(CXX) -o $@ $^
 ddbserver: $(SERVEROBJ)
 	$(ECHO) $(CXX) -o $@ $^ -ltokyocabinet
-	$(ECHO) mkdir server1 server2 server3
+	#$(ECHO) mkdir server1 server2 server3
 	$(ECHO) cp ddbserver ./server1/
 	$(ECHO) cp ddbserver ./server2/
 	$(ECHO) cp ddbserver ./server3/
@@ -46,17 +46,18 @@ slave:	$(SLAVEOBJ)
 	$(ECHO) $(CXX) -o $@ $^ -lpthread
 master: $(MASTEROBJ)
 	$(ECHO) $(CXX) -o $@ $^ -ltokyocabinet
-	$(ECHO) mkdir server1 server2 server3
+	#$(ECHO) mkdir server1 server2 server3
 	$(ECHO) cp slave ./server1/
 	$(ECHO) cp slave ./server2/
 	$(ECHO) cp slave ./server3/
+	rm slave
 
 .c.o:
 	$(ECHO) $(CXX) -c $(CXXFLAGS) $< -o $@
 
 clean:
 	@$(RM) $(CLIENTOBJ) $(SERVEROBJ) $(TARGET) $(TESTGROUP)
-	@$(RM) -r ./server1 ./server2/ ./server3/
+	@$(RM) -r ./server1/slave ./server2/slave ./server3/slave
 	@$(RUBBISHFILES) | xargs $(RM)
 	@$(RM) *.o
 

@@ -90,7 +90,7 @@ set tabstop=4
 set termencoding=utf-8
 set whichwrap=b,s,<,>,h,l
 set wildmenu
-set window=21
+set window=41
 let s:so_save = &so | let s:siso_save = &siso | set so=0 siso=0
 let v:this_session=expand("<sfile>:p")
 silent only
@@ -100,10 +100,14 @@ if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
 endif
 set shortmess=aoO
 badd +1 server/master.c
-badd +15 server/slave.c
+badd +21 server/slave.c
 badd +58 server/dbserver.c
 badd +46 common/Socket.c
-badd +1 server/serversocket.c
+badd +47 server/serversocket.c
+badd +16 common/dbProtocol.c
+badd +34 common/dbProtocol.h
+badd +35 common/Socket.h
+badd +0 server/ServerCtrl.h
 args server/master.c server/slave.c
 edit server/master.c
 set splitbelow splitright
@@ -216,12 +220,12 @@ setlocal nowinfixheight
 setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
-let s:l = 58 - ((34 * winheight(0) + 19) / 38)
+let s:l = 152 - ((3 * winheight(0) + 19) / 38)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-58
-normal! 08l
+152
+normal! 0
 tabedit server/slave.c
 set splitbelow splitright
 set nosplitbelow
@@ -334,32 +338,80 @@ setlocal nowinfixheight
 setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
-79
+39
 normal zo
-92
+39
 normal zo
-92
+39
 normal zo
-79
+41
 normal zo
-122
+64
 normal zo
-125
+74
 normal zo
-134
+75
 normal zo
-141
+76
 normal zo
-125
+75
 normal zo
-143
+84
 normal zo
-let s:l = 77 - ((39 * winheight(0) + 19) / 38)
+84
+normal zo
+74
+normal zo
+64
+normal zo
+106
+normal zo
+117
+normal zo
+128
+normal zo
+133
+normal zo
+133
+normal zo
+133
+normal zo
+140
+normal zo
+128
+normal zo
+106
+normal zo
+153
+normal zo
+153
+normal zo
+206
+normal zo
+219
+normal zo
+220
+normal zo
+221
+normal zo
+220
+normal zo
+219
+normal zo
+206
+normal zo
+273
+normal zo
+294
+normal zo
+294
+normal zo
+let s:l = 158 - ((10 * winheight(0) + 19) / 38)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-77
-normal! 08l
+158
+normal! 04l
 tabedit server/dbserver.c
 set splitbelow splitright
 set nosplitbelow
@@ -472,7 +524,7 @@ setlocal nowinfixheight
 setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
-let s:l = 51 - ((20 * winheight(0) + 19) / 38)
+let s:l = 51 - ((3 * winheight(0) + 19) / 38)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -595,21 +647,21 @@ setlocal wrapmargin=0
 normal zo
 24
 normal zo
-let s:l = 48 - ((13 * winheight(0) + 9) / 18)
+let s:l = 82 - ((3 * winheight(0) + 19) / 38)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-48
-normal! 016l
+82
+normal! 013l
 lcd ~/netprom/homework/DistributedDB
-tabedit ~/netprom/homework/DistributedDB/server/serversocket.c
+tabedit ~/netprom/homework/DistributedDB/server/ServerCtrl.h
 set splitbelow splitright
 set nosplitbelow
 set nosplitright
 wincmd t
 set winheight=1 winwidth=1
 argglobal
-edit ~/netprom/homework/DistributedDB/server/serversocket.c
+edit ~/netprom/homework/DistributedDB/server/ServerCtrl.h
 map <buffer> \  :w:make
 setlocal keymap=
 setlocal noarabic
@@ -714,14 +766,14 @@ setlocal nowinfixheight
 setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
-let s:l = 47 - ((34 * winheight(0) + 19) / 38)
+let s:l = 47 - ((35 * winheight(0) + 19) / 38)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
 47
-normal! 0
+normal! 016l
 lcd ~/netprom/homework/DistributedDB
-tabnext 4
+tabnext 5
 if exists('s:wipebuf')
   silent exe 'bwipe ' . s:wipebuf
 endif

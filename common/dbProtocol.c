@@ -28,7 +28,7 @@ DBPacketHeader *GetHeader(char *buf)
     return (DBPacketHeader*)buf;
 }
 
-int Append(char *buf, char *data, int len)
+int Append(char *buf, const char *data, int len)
 {
     DBPacketHeader *hBuf = (DBPacketHeader *)buf;
     if (hBuf->size > sizeof(DBPacketHeader))

@@ -21,6 +21,13 @@
 #include "../common/dbProtocol.h"
 #include "../common/Socket.h"
 
+#define BACKUP1_DIR     ".//backup1//"
+#define BACKUP2_DIR     ".//backup2//"
+#define BACKUP_POSTFIX  ".bac"
+#define FILE_TO_SEND    "a.db"
+#define FILE_MASTER   "a.db"
+#define MAX_FILENAME_LEN 128
+
 SlaveList slaves;
 int pos;  // This server's position in slaves.
 
@@ -29,14 +36,23 @@ int listen_sock;
 char *addr;
 int port;
 
-void Send(enum CMD cmd, int key, char *buf)
+DBPacketHeader* ExchangePacket(enum CMD cmd, int key, 
+        const char *append_str, int len, int sockfd)
 {
+    static char szBuf[MAX_BUF_LEN] = "\0";
+    DBPacketHeader hd;
+    hd.cmd = cmd;
+    hd.key = key;
+    WriteHeader(szBuf, &hd);
+    Append(szBuf, append_str, len);
+    SendMsg(sockfd, szBuf);
+    RecvMsg(sockfd, szBuf);
+    return (DBPacketHeader *)szBuf;
 }
 
 void AddNewSlave(int pos, SlaveNode sn)
 {
     int i;
-    printf("slaves: num:%d pos:%d\n", slaves.num, pos);
     for (i=slaves.num-1; i>=pos; i--)
         slaves.nodes[i+1] = slaves.nodes[i];
     slaves.nodes[pos] = sn;
@@ -44,7 +60,7 @@ void AddNewSlave(int pos, SlaveNode sn)
     slaves.version ++;
 }
 
-void HandleMasterRequest(int master_sock)
+void HandleMasterRequest()
 {
     char szBuf[MAX_BUF_LEN] = "\0";
     DBPacketHeader *phd;
@@ -85,47 +101,114 @@ void HandleMasterRequest(int master_sock)
 // first send file name (Append in dbProtocol) and 
 // the size of the file (key in DBPacketHeader), 
 // then the file content
-void SendFile(int accept_sock)
+int SendFile(int sockfd, const char *filename, enum CMD rescmd)
 {
-    char filename[] = "a.db";
     FILE *fp = fopen(filename, "r");
+    if (fp == NULL)
+    {
+        fprintf(stderr, "Open file:%s failed.\n", filename);
+        return -1;
+    }
+    printf("Start sending file:%s\n", filename);
     fseek(fp, 0, SEEK_END);
     int flen = ftell(fp);
-    char szBuf[MAX_BUF_LEN] = "\0";
-    DBPacketHeader hd;
-    hd.cmd = CLIP_DATA_R;
-    hd.key = flen;
-    WriteHeader(szBuf, &hd);
-    Append(szBuf, filename, sizeof(filename));
-    printf("length of filename:%d\n", sizeof(filename));
-    SendMsg(accept_sock, szBuf);
 
-    RecvMsg(accept_sock, szBuf);
-    DBPacketHeader *phd = (DBPacketHeader *)szBuf;
+    DBPacketHeader *phd = 
+        ExchangePacket(rescmd, flen, filename, strlen(filename)+1, sockfd);
     if (phd->cmd != FILETRANS_R)
     {
         fprintf(stderr, "File info transfer failed.\n");
-        return;
+        return -1;
     }
 
     fseek(fp, 0, SEEK_SET);
     int finish_size = 0;
     while (finish_size < flen)
     {
-        hd.cmd = FILETRANS;
-        hd.key = fread(GetAppend(phd), sizeof(char), 
-                MAX_BUF_LEN - sizeof(DBPacketHeader), fp);
-        WriteHeader(szBuf, &hd);
-        SendMsg(accept_sock, szBuf);
-
-        RecvMsg(accept_sock, szBuf);
+        char szBuf[MAX_BUF_LEN] = "\0";
+        int len =  fread(szBuf, sizeof(char), APPENDSIZE, fp);
+        phd = ExchangePacket(FILETRANS, len, szBuf, len, sockfd);
         if (phd->cmd != FILETRANS_R)
         {
             fprintf(stderr, "File transfer failed.\n");
-            return;
+            return -1;
         }
-        finish_size += hd.key;
+        finish_size += len;
     }
+    printf("Sending file complete.\n\n");
+
+    return 0;
+}
+
+// k determines whether the file is origin file or backup file
+int RecvFile(int sockfd, char *filename, int len)
+{
+    // open file 
+    printf("Start recving file:%s\n", filename);
+    FILE *fp = fopen(filename, "w");
+    if (fp == NULL)
+        printf("open file failed.\n");
+    int total_size = len;
+
+    // transfer
+    int finish_size = 0;
+    while (finish_size < total_size)
+    {
+        DBPacketHeader *phd = ExchangePacket(FILETRANS_R, 0, NULL, 0, sockfd);
+        int write_len = fwrite(GetAppend(phd), sizeof(char), phd->key, fp);
+        if (write_len < phd->key)
+        {
+            fprintf(stderr, "Write data to file failed.\n");
+            return -1;
+        }
+        finish_size += phd->key;
+    }
+    char szBuf[MAX_BUF_LEN] = "\0";
+    DBPacketHeader hd;
+    hd.cmd = FILETRANS_R;
+    WriteHeader(szBuf, &hd);
+    SendMsg(sockfd, szBuf);
+
+    fclose(fp);
+    printf("Recving file complete.\n\n");
+
+    return 0;
+}
+
+void ReplaceBackup2ByBackup1()
+{
+    char cpcmd[128] = "cp ";
+    strcat(cpcmd, BACKUP1_DIR);
+    strcat(cpcmd, "* ");
+    strcat(cpcmd, BACKUP2_DIR);
+    if (0 != system(cpcmd))
+        printf("Replace backup2 by backup1 failed.\n");
+    strcpy(cpcmd, "rm ");
+    strcat(cpcmd, BACKUP1_DIR);
+    strcat(cpcmd, "*");
+    if (0 != system(cpcmd))
+        printf("Remove files backup1/* failed.\n");
+}
+
+void SaveTheSendedFileInBackup1()
+{
+    char cpcmd[128] = {"cp "};
+    strcat(cpcmd, FILE_TO_SEND);
+    strcat(cpcmd, " ");
+    strcat(cpcmd, BACKUP1_DIR);
+    strcat(cpcmd, FILE_TO_SEND);
+    strcat(cpcmd, BACKUP_POSTFIX);
+    if (0 != system(cpcmd))
+        printf("Backup for successor failed.\n");
+}
+
+void RemoveBackup2()
+{
+    char rmcmd[128] = "rm ";
+    strcat(rmcmd, BACKUP2_DIR);
+    strcat(rmcmd, "*");
+    if (0 != system(rmcmd))
+        printf("Remove backup2/* failed.\n");
 }
 
 void HandleSlaveRequest()
@@ -134,7 +217,6 @@ void HandleSlaveRequest()
     int ip;
     char szBuf[MAX_BUF_LEN] = "\0";
     DBPacketHeader *phd;
-    DBPacketHeader hd;
 
     ServiceStart(listen_sock, &accept_sock, &ip);
     RecvMsg(accept_sock, szBuf);
@@ -145,21 +227,37 @@ void HandleSlaveRequest()
         case CLIP_DATA:
             {
                 // replace backup2 by backup1
-                // find the key the new slave uses
-                // send all of the data after key (CLIP_DATA_R)
-                // store the sended data into backup1
-                SendFile(accept_sock);
+                ReplaceBackup2ByBackup1();
+                // split the data the new slave uses into FILE_TO_SEND
+                printf("clip after %d.\n", phd->key);
+                // SplitByKey(filetosplit, phd->key, FILE_TO_SEND);
+                // send FILE_TO_SEND
+                SendFile(accept_sock, FILE_TO_SEND, CLIP_DATA_R);
+                // save the sended file in backup1/
+                SaveTheSendedFileInBackup1();
+                // Finish.
                 ServiceStop(accept_sock);
+                break;
             }
         case BACKUP:
             {
                 // send all of the data (not backup data, just origin data)
                 // (BACKUP_R)
+                SendFile(accept_sock, FILE_MASTER, BACKUP_R);
+                ServiceStop(accept_sock);
+                break;
             }
-        case UPDATE_BACKUP:
+        case UPDATE_BACKUP2:
             {
+                char szBuf[MAX_BUF_LEN] = "\0";
+                DBPacketHeader hd;
+                hd.cmd = UPDATE_BACKUP2_R;
+                WriteHeader(szBuf, &hd);
+                SendMsg(accept_sock, szBuf);
                 // delete backup2
-                // split backup2 from backup1
+                RemoveBackup2();
+                // split backup1 by key(phd->key) 
+                break;
             }
         default:
             {
@@ -167,7 +265,7 @@ void HandleSlaveRequest()
     }
 }
 
-void HandleCtrlRequest(int master_sock)
+void HandleCtrlRequest()
 {
     int epollid;
     struct epoll_event event;
@@ -177,7 +275,7 @@ void HandleCtrlRequest(int master_sock)
     event.events = EPOLLIN | EPOLLRDHUP;
     epoll_ctl(epollid, EPOLL_CTL_ADD, listen_sock, &event);
     event.data.fd = master_sock;
-    event.events = EPOLLIN;
+    event.events = EPOLLIN | EPOLLRDHUP;
     epoll_ctl(epollid, EPOLL_CTL_ADD, master_sock, &event);
 
     while (1)
@@ -185,10 +283,17 @@ void HandleCtrlRequest(int master_sock)
         epoll_wait(epollid, &event, 1, -1);
         if (event.data.fd == listen_sock)
         {
+            printf("listen_sock.\n");
             HandleSlaveRequest();
+        }
+        else if ((event.events & EPOLLIN) && (event.events & EPOLLRDHUP))
+        {
+            printf("Remote service shut down.\n");
+            CloseRemoteService(event.data.fd);
         }
         else if (event.data.fd == master_sock)
         {
+            printf("master_sock.\n");
             HandleMasterRequest(master_sock);
         }
     }
@@ -196,21 +301,24 @@ void HandleCtrlRequest(int master_sock)
 
 void RegisterAndLoadSlaves(int master_sock)
 {
-    char szBuf[MAX_BUF_LEN] = "\0";
-    DBPacketHeader hd;
-    hd.cmd = ADD_SLAVE;
-    hd.key = port;
-    WriteHeader(szBuf, &hd);
-    SendMsg(master_sock, szBuf);
-
-    RecvMsg(master_sock, szBuf);
-    DBPacketHeader *phd = (DBPacketHeader *)szBuf;
+    DBPacketHeader *phd = ExchangePacket(ADD_SLAVE, port, NULL, 0, master_sock);
     assert(phd->cmd == ADD_SLAVE_R);
     pos = phd->key;
     slaves = *(SlaveList *)GetAppend(phd);
     printslaves(slaves);
 }
 
+char *GetFileName(int k, char *filename)
+{
+    static char filepath[][MAX_FILENAME_LEN] = {
+        {"\0"}, {BACKUP1_DIR}, {BACKUP2_DIR}
+    };
+    strcat(filepath[k], filename);
+    if (k != 0)
+        strcat(filepath[k], BACKUP_POSTFIX);
+
+    return filepath[k];
+}
 
 int ClipDataFromPre()
 {
@@ -223,43 +331,53 @@ int ClipDataFromPre()
         fprintf(stderr, "Connet to slave:%d failed.\n", prepos);
         return -1;
     }
+    printf("Connect to slave: %d\n", prepos);
 
-    char szBuf[MAX_BUF_LEN] = "\0";
-    DBPacketHeader hd;
-    hd.cmd = CLIP_DATA;
-    WriteHeader(szBuf, &hd);
-    SendMsg(pre_slave.sock, szBuf);
-    RecvMsg(pre_slave.sock, szBuf);
-    DBPacketHeader *phd = (DBPacketHeader *)szBuf;
+    DBPacketHeader *phd = ExchangePacket(CLIP_DATA, 
+            slaves.nodes[pos].key, NULL, 0, pre_slave.sock);
     assert(phd->cmd == CLIP_DATA_R);
 
-    FILE *fp = fopen(GetAppend(phd), "w");
-    int total_size = phd->key;
-    hd.cmd = FILETRANS_R;
-    WriteHeader(szBuf, &hd);
-    SendMsg(pre_slave.sock, szBuf);
+    // choose file according to k
+    char *filename = GetFileName(0, GetAppend(phd));
 
-    int finish_size = 0;
-    while (finish_size < total_size)
+    return RecvFile(pre_slave.sock, filename, phd->key);
+}
+
+int BackupForOtherSlave(int k)
+{
+    int hispos = (pos + k) % slaves.num;
+    SlaveNode slave = slaves.nodes[hispos];
+
+    if (-1 == OpenRemoteService2(&slave.sock, slave.ip, slave.port))
     {
-        RecvMsg(pre_slave.sock, szBuf);
-        phd = (DBPacketHeader *)szBuf;
-        // write GetAppend(phd) into file;
-        int write_len = fwrite(GetAppend(phd), sizeof(char), phd->key, fp);
-        if (write_len < phd->key)
-        {
-            fprintf(stderr, "Write data to file failed.\n");
-            return -1;
-        }
-        finish_size += phd->key;
+        fprintf(stderr, "Connet to slave:%d failed.\n", hispos);
+        return -1;
+    }
+    printf("Connect to slave: %d\n", hispos);
+    
+    DBPacketHeader *phd = ExchangePacket(BACKUP, 0, NULL, 0, slave.sock);
+    assert(phd->cmd == BACKUP_R);
+    
+    char *filename = GetFileName(k, GetAppend(phd));
 
-        hd.cmd = FILETRANS_R;
-        WriteHeader(szBuf, &hd);
-        SendMsg(pre_slave.sock, szBuf);
-    } 
-    fclose(fp);
+    return RecvFile(slave.sock, filename, phd->key);
+}
 
-    return 0;
+void Notify2ndPreUpdateBackup2()
+{
+    int hispos = (pos - 2 + slaves.num) % slaves.num;
+    SlaveNode pre2_slave = slaves.nodes[hispos];
+
+    if (-1 == OpenRemoteService2(&pre2_slave.sock, pre2_slave.ip, pre2_slave.port))
+    {
+        fprintf(stderr, "Connet to slave:%d failed.\n", hispos);
+        return ;
+    }
+    printf("Connect to slave: %d\n", hispos);
+
+    DBPacketHeader *phd = ExchangePacket(UPDATE_BACKUP2,
+            0, NULL, 0, pre2_slave.sock);
+    assert(phd->cmd == UPDATE_BACKUP2_R);
 }
 
 int main(int argc, char *argv[])
@@ -276,18 +394,26 @@ int main(int argc, char *argv[])
 
     if (-1 == OpenRemoteService(&master_sock,  argv[1],  atoi(argv[2])))
         return -1;
-
     RegisterAndLoadSlaves(master_sock);
-    if (slaves.num != 1)
+
+    /*if (0 != system("mkdir backup1"))
+        printf("mkdir backup1 failed.\n");
+    if (0 != system("mkdir backup2"))
+        printf("mkdir backup2 failed.\n");*/
+        
+    if (slaves.num > 1)
     {
-        // Clip data from predecessor
         if (-1 == ClipDataFromPre())
             return -1;
-        // Notify 2nd-predecessor UPDATE_BACKUP
-        // Backup data for successor and 2nd-successor
+        BackupForOtherSlave(1);
+    }
+    if (slaves.num > 2)
+    {
+        Notify2ndPreUpdateBackup2();
+        BackupForOtherSlave(2);
     }
 
-    pthread_create(&ctrl_thread_id, NULL, (void*)HandleCtrlRequest, (void*)master_sock);
+    pthread_create(&ctrl_thread_id, NULL, (void*)HandleCtrlRequest, NULL);
 
     while (1)
         ;  // DB operating

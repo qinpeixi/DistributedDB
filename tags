@@ -18,11 +18,10 @@
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.9~svn20110310	//
 0	Session.vim	/^normal! 0$/;"	m
-011l	Session.vim	/^normal! 011l$/;"	m
-012l	Session.vim	/^normal! 012l$/;"	m
-017l	Session.vim	/^normal! 017l$/;"	m
-031l	Session.vim	/^normal! 031l$/;"	m
-08l	Session.vim	/^normal! 08l$/;"	m
+013l	Session.vim	/^normal! 013l$/;"	m
+016l	Session.vim	/^normal! 016l$/;"	m
+04l	Session.vim	/^normal! 04l$/;"	m
+05l	Session.vim	/^normal! 05l$/;"	m
 <C-F2>	Session.vim	/^nnoremap <C-F2> :vert diffsplit $/;"	m
 <C-F3>	Session.vim	/^map <C-F3> \\be  $/;"	m
 <C-F5>	Session.vim	/^map <C-F5> :call CompileRunGcc()$/;"	m
@@ -56,15 +55,19 @@ ADD_SLAVE_R	common/dbProtocol.h	/^    ADD_SLAVE_R, DEL_SLAVE_R, $/;"	e	enum:CMD
 APPENDSIZE	common/dbProtocol.h	34;"	d
 AddNewSlave	server/slave.c	/^void AddNewSlave(int pos, SlaveNode sn)$/;"	f
 AddOpenedDB	server/tcDB.c	/^OpenedDB *AddOpenedDB(char *name, TCHDB *hdb)$/;"	f
-AddToSlaveList	server/master.c	/^int AddToSlaveList(char *addr, int port, Socket sock)$/;"	f
-Append	common/dbProtocol.c	/^int Append(char *buf, char *data, int len)$/;"	f
-BACKUP	common/dbProtocol.h	/^    CLIP_DATA,   BACKUP,    $/;"	e	enum:CMD
-BACKUP_R	common/dbProtocol.h	/^    CLIP_DATA_R, BACKUP_R,    $/;"	e	enum:CMD
+AddToSlaveList	server/master.c	/^int AddToSlaveList(SlaveNode sn)$/;"	f
+Append	common/dbProtocol.c	/^int Append(char *buf, const char *data, int len)$/;"	f
+BACKUP	common/dbProtocol.h	/^    CLIP_DATA,   BACKUP,    FILETRANS,$/;"	e	enum:CMD
+BACKUP1_DIR	server/slave.c	24;"	d	file:
+BACKUP2_DIR	server/slave.c	25;"	d	file:
+BACKUP_POSTFIX	server/slave.c	26;"	d	file:
+BACKUP_R	common/dbProtocol.h	/^    CLIP_DATA_R, BACKUP_R,  FILETRANS_R,$/;"	e	enum:CMD
+BackupForOtherSlave	server/slave.c	/^void BackupForOtherSlave(int k)$/;"	f
 CIRCULAR_QUEUE_H	server/CircularQueue.h	15;"	d
 CLIENTOBJ	makefile	/^CLIENTOBJ = $(CLIENTSRC:.c=.o)$/;"	m
 CLIENTSRC	makefile	/^CLIENTSRC = $(wildcard .\/client\/*.c .\/common\/*.c)$/;"	m
-CLIP_DATA	common/dbProtocol.h	/^    CLIP_DATA,   BACKUP,    $/;"	e	enum:CMD
-CLIP_DATA_R	common/dbProtocol.h	/^    CLIP_DATA_R, BACKUP_R,    $/;"	e	enum:CMD
+CLIP_DATA	common/dbProtocol.h	/^    CLIP_DATA,   BACKUP,    FILETRANS,$/;"	e	enum:CMD
+CLIP_DATA_R	common/dbProtocol.h	/^    CLIP_DATA_R, BACKUP_R,  FILETRANS_R,$/;"	e	enum:CMD
 CLOSE	common/dbProtocol.h	/^    SET,   GET,   DEL,   OPEN,   CLOSE,   QUIT,  HELP,$/;"	e	enum:CMD
 CLOSE_R	common/dbProtocol.h	/^    SET_R, GET_R, DEL_R, OPEN_R, CLOSE_R, QUIT_R, CMDFAIL,$/;"	e	enum:CMD
 CMD	common/dbProtocol.h	/^enum CMD {$/;"	g
@@ -74,6 +77,7 @@ CXXFLAGS	makefile	/^CXXFLAGS = -O2 -Wall -g$/;"	m
 Check	client/parseinput.c	/^int Check(const char *pat, const char *str)$/;"	f
 ClientSockHandle	server/serversocket.h	/^} ClientSockHandle;$/;"	t	typeref:struct:__anon3
 ClientSocket	test/testMDB.c	/^} ClientSocket;$/;"	t	typeref:struct:__anon1	file:
+ClipDataFromPre	server/slave.c	/^int ClipDataFromPre()$/;"	f
 CloseAllCloudNodes	client/netdbapi.c	/^int CloseAllCloudNodes(DataBase hdb, char *buf)$/;"	f
 CloseRemoteService	common/Socket.c	/^void CloseRemoteService(int sockfd)$/;"	f
 CloudNode	client/netdbapi.c	/^} CloudNode;$/;"	t	typeref:struct:__anon8	file:
@@ -108,34 +112,46 @@ Debu	common/dbProtocol.h	100;"	d
 DelOpenedDB	server/tcDB.c	/^int DelOpenedDB(OpenedDB *podb)$/;"	f
 ECHO	makefile	/^ECHO = @$/;"	m
 EnQueue	server/CircularQueue.c	/^void EnQueue(QueueNode *pnode)$/;"	f
+ExchangePacket	server/slave.c	/^DBPacketHeader* ExchangePacket(enum CMD cmd, int key, $/;"	f
 FAILURE	common/Database.h	26;"	d
+FILETRANS	common/dbProtocol.h	/^    CLIP_DATA,   BACKUP,    FILETRANS,$/;"	e	enum:CMD
+FILETRANS_R	common/dbProtocol.h	/^    CLIP_DATA_R, BACKUP_R,  FILETRANS_R,$/;"	e	enum:CMD
+FILE_MASTER	server/slave.c	28;"	d	file:
+FILE_TO_SEND	server/slave.c	27;"	d	file:
 FindLongestSection	server/master.c	/^int FindLongestSection()$/;"	f
 GET	common/dbProtocol.h	/^    SET,   GET,   DEL,   OPEN,   CLOSE,   QUIT,  HELP,$/;"	e	enum:CMD
 GET_LIST	common/dbProtocol.h	/^    GET_LIST,   GET_LIST_R, $/;"	e	enum:CMD
 GET_LIST_R	common/dbProtocol.h	/^    GET_LIST,   GET_LIST_R, $/;"	e	enum:CMD
 GET_R	common/dbProtocol.h	/^    SET_R, GET_R, DEL_R, OPEN_R, CLOSE_R, QUIT_R, CMDFAIL,$/;"	e	enum:CMD
 GetAppend	common/dbProtocol.c	/^char *GetAppend(DBPacketHeader *phd)$/;"	f
+GetFileName	server/slave.c	/^char *GetFileName(int k, char *filename)$/;"	f
 GetHeader	common/dbProtocol.c	/^DBPacketHeader *GetHeader(char *buf)$/;"	f
+GetLength	server/master.c	/^int GetLength(int pos)$/;"	f
 GetMatch	client/parseinput.c	/^int GetMatch(const char *pat, char *str, char *match)$/;"	f
 GetOpenedDB	server/tcDB.c	/^OpenedDB *GetOpenedDB(char *name)$/;"	f
+GetPort	common/Socket.c	/^int GetPort(int sockfd)$/;"	f
 GetSocket	client/netdbapi.c	/^int *GetSocket(DataBase hdb, dbKey key)$/;"	f
 HANDLE_REQUESE_H	server/HandleRequest.h	15;"	d
 HEARTBEAT	common/dbProtocol.h	/^    HEARTBEAT,    $/;"	e	enum:CMD
 HELP	common/dbProtocol.h	/^    SET,   GET,   DEL,   OPEN,   CLOSE,   QUIT,  HELP,$/;"	e	enum:CMD
-HandleCtrlRequest	server/slave.c	/^void HandleCtrlRequest(Socket mastersock)$/;"	f
+HandleCtrlRequest	server/slave.c	/^void HandleCtrlRequest()$/;"	f
+HandleMasterRequest	server/slave.c	/^void HandleMasterRequest()$/;"	f
 HandleRequest	server/HandleRequest.c	/^void HandleRequest(int id)$/;"	f
-HandleRequest	server/master.c	/^void HandleRequest(ClientSockHandle hcsock)$/;"	f
+HandleRequest	server/master.c	/^void HandleRequest(int sock, int ip)$/;"	f
+HandleSlaveRequest	server/slave.c	/^void HandleSlaveRequest()$/;"	f
 HelpPrompt	client/parseinput.c	/^void HelpPrompt()$/;"	f
 InitQueue	server/CircularQueue.c	/^void InitQueue()$/;"	f
 InitThreads	server/HandleRequest.c	/^void InitThreads()$/;"	f
 InitializeService	common/Socket.c	/^int InitializeService(int *listen_sock, char *addr, int port)$/;"	f
 KillThreads	server/HandleRequest.c	/^void KillThreads()$/;"	f
 LOCAL_ADDR	common/Socket.h	18;"	d
-MASTEROBJ	makefile	/^MASTEROBJ = .\/common\/dbProtocol.o .\/server\/serversocket.o .\/server\/master.o .\/server\/MemoryDB.o$/;"	m
+MASTEROBJ	makefile	/^MASTEROBJ = .\/common\/dbProtocol.o .\/common\/Socket.o .\/server\/master.o$/;"	m
 MAXPACKETLEN	common/dbProtocol.h	33;"	d
 MAX_BUF_LEN	common/Socket.h	20;"	d
 MAX_CONNECT_QUEUE	common/Socket.h	22;"	d
+MAX_FILENAME_LEN	server/slave.c	29;"	d	file:
 MAX_INPUT_LEN	client/parseinput.h	19;"	d
+MAX_KEY	server/ServerCtrl.h	20;"	d
 MAX_QUEUE_LEN	server/CircularQueue.h	19;"	d
 MAX_QUEUE_USELEN	server/CircularQueue.h	20;"	d
 MAX_SLAVE_NUM	server/ServerCtrl.h	19;"	d
@@ -157,6 +173,7 @@ OPEN	common/dbProtocol.h	/^    SET,   GET,   DEL,   OPEN,   CLOSE,   QUIT,  HELP
 OPEN_R	common/dbProtocol.h	/^    SET_R, GET_R, DEL_R, OPEN_R, CLOSE_R, QUIT_R, CMDFAIL,$/;"	e	enum:CMD
 OpenAllCloudNodes	client/netdbapi.c	/^DataBase OpenAllCloudNodes(char *buf)$/;"	f
 OpenRemoteService	common/Socket.c	/^int OpenRemoteService(int *psockfd, char *addr, int port)$/;"	f
+OpenRemoteService2	common/Socket.c	/^int OpenRemoteService2(int *psockfd, int ip, int port)$/;"	f
 OpenedDB	server/tcDB.c	/^} OpenedDB;$/;"	t	typeref:struct:__anon4	file:
 PARSEINPUT_H	client/parseinput.h	15;"	d
 PORT	common/Socket.h	17;"	d
@@ -168,20 +185,24 @@ QUIT_R	common/dbProtocol.h	/^    SET_R, GET_R, DEL_R, OPEN_R, CLOSE_R, QUIT_R, C
 QueueNode	server/CircularQueue.h	/^} QueueNode;$/;"	t	typeref:struct:__anon5
 RM_SLAVE	common/dbProtocol.h	/^    NEW_SLAVE,   RM_SLAVE,$/;"	e	enum:CMD
 RM_SLAVE_R	common/dbProtocol.h	/^    NEW_SLAVE_R, RM_SLAVE_R, $/;"	e	enum:CMD
-RUBBISHFILES	makefile	/^RUBBISHFILES = find . -regex '.*\\.gch\\|.*~\\|.*\\..*db' -type f$/;"	m
+RUBBISHFILES	makefile	/^RUBBISHFILES = find . -regex '.*\\.gch\\|.*~\\|.*\\..*hdb' -type f$/;"	m
 ReadCloudNodes	client/netdbapi.c	/^int ReadCloudNodes(CloudNode *pnodes)$/;"	f
+RecvFile	server/slave.c	/^int RecvFile(int sockfd, char *filename, int len)$/;"	f
 RecvMsg	common/Socket.c	/^void RecvMsg(int sockfd, char *buf)$/;"	f
 RegMatch	client/parseinput.c	/^int RegMatch(const char *pat, const char *str, int *start, int *end)$/;"	f
-RegisterAndLoadSlaves	server/slave.c	/^void RegisterAndLoadSlaves(Socket mastersock)$/;"	f
+RegisterAndLoadSlaves	server/slave.c	/^void RegisterAndLoadSlaves(int master_sock)$/;"	f
+ReplaceBackup2ByBackup1	server/slave.c	/^void ReplaceBackup2ByBackup1()$/;"	f
 SERVERCTRL_H	server/ServerCtrl.h	15;"	d
 SERVEROBJ	makefile	/^SERVEROBJ = $(SERVERSRC:.c=.o)$/;"	m
 SERVERSOCKET_H	server/serversocket.h	15;"	d
 SERVERSRC	makefile	/^SERVERSRC = $(wildcard .\/server\/*.c .\/common\/*.c)$/;"	m
 SET	common/dbProtocol.h	/^    SET,   GET,   DEL,   OPEN,   CLOSE,   QUIT,  HELP,$/;"	e	enum:CMD
 SET_R	common/dbProtocol.h	/^    SET_R, GET_R, DEL_R, OPEN_R, CLOSE_R, QUIT_R, CMDFAIL,$/;"	e	enum:CMD
-SLAVEOBJ	makefile	/^SLAVEOBJ  = .\/common\/dbProtocol.o .\/client\/clientsocket.o .\/server\/slave.o$/;"	m
+SLAVEOBJ	makefile	/^SLAVEOBJ  = .\/common\/dbProtocol.o .\/common\/Socket.o .\/server\/slave.o$/;"	m
 SOCKET_H	common/Socket.h	15;"	d
 SUCCESS	common/Database.h	25;"	d
+SaveTheSendedFileInBackup1	server/slave.c	/^void SaveTheSendedFileInBackup1()$/;"	f
+SendFile	server/slave.c	/^int SendFile(int sockfd, const char *filename)$/;"	f
 SendMsg	common/Socket.c	/^void SendMsg(int sockfd, char *buf)$/;"	f
 ServiceStart	common/Socket.c	/^int ServiceStart(int listen_sock, int *accept_sock, int *ip)$/;"	f
 ServiceStop	common/Socket.c	/^void ServiceStop(int sockfd)$/;"	f
@@ -196,7 +217,7 @@ TESTOBJ	makefile	/^TESTOBJ   = $(TESTSRC:.c=.o) .\/server\/tcDB.o .\/common\/dbP
 TESTSRC	makefile	/^TESTSRC   = $(wildcard .\/test\/*.c)$/;"	m
 TESTTARGET	makefile	/^TESTTARGET = .\/test\/testtcDB .\/test\/testProtocol .\/test\/testMemory .\/test\/testCircularQueue$/;"	m
 THREADS_NUM	server/HandleRequest.c	26;"	d	file:
-UPDATE_BACKUP	common/dbProtocol.h	/^    UPDATE_BACKUP$/;"	e	enum:CMD
+UPDATE_BACKUP2	common/dbProtocol.h	/^    UPDATE_BACKUP2$/;"	e	enum:CMD
 WriteHeader	common/dbProtocol.c	/^void WriteHeader(char *buf, DBPacketHeader *header)$/;"	f
 \	Session.vim	/^map <buffer> \\  :w$/;"	m
 _DATABASE_H_	common/Database.h	15;"	d
@@ -226,6 +247,7 @@ isQueueFull	server/CircularQueue.c	/^int isQueueFull()$/;"	f
 key	common/dbProtocol.h	/^    int key;$/;"	m	struct:__anon2
 key	server/ServerCtrl.h	/^    int key; \/\/ The key that the slave uses.$/;"	m	struct:__anon6
 lasterr	server/tcDB.c	/^static char lasterr[1024];$/;"	v	file:
+listen_sock	server/slave.c	/^int listen_sock;$/;"	v
 main	client/dbclient.c	/^int main()$/;"	f
 main	server/dbserver.c	/^int main(int argc, char *argv[])$/;"	f
 main	server/master.c	/^int main(int argc, char *argv[])$/;"	f
@@ -234,6 +256,7 @@ main	test/testCircularQueue.c	/^int main()$/;"	f
 main	test/testMDB.c	/^int main()$/;"	f
 main	test/testProtocol.c	/^int main()$/;"	f
 main	test/testtcDB.c	/^int main()$/;"	f
+master_sock	server/slave.c	/^int master_sock;$/;"	v
 md	Session.vim	/^nmap md :!~\/.vim\/markdown.pl % > %.html $/;"	m
 mdb	server/tcDB.c	/^TCMDB *mdb = NULL;  \/\/ The db to save all of the opened db$/;"	v
 name	server/tcDB.c	/^    char *name;$/;"	m	struct:__anon4	file:
@@ -246,13 +269,11 @@ port	server/slave.c	/^int port;$/;"	v
 pos	server/slave.c	/^int pos;  \/\/ This server's position in slaves.$/;"	v
 printslaves	server/ServerCtrl.h	/^void printslaves(SlaveList sl)$/;"	f
 s:cpo_save	Session.vim	/^let s:cpo_save=&cpo$/;"	v
-s:l	Session.vim	/^let s:l = 100 - ((29 * winheight(0) + 19) \/ 38)$/;"	v
-s:l	Session.vim	/^let s:l = 19 - ((3 * winheight(0) + 19) \/ 38)$/;"	v
-s:l	Session.vim	/^let s:l = 21 - ((18 * winheight(0) + 20) \/ 40)$/;"	v
-s:l	Session.vim	/^let s:l = 27 - ((12 * winheight(0) + 19) \/ 38)$/;"	v
-s:l	Session.vim	/^let s:l = 39 - ((24 * winheight(0) + 19) \/ 38)$/;"	v
-s:l	Session.vim	/^let s:l = 50 - ((25 * winheight(0) + 19) \/ 38)$/;"	v
-s:l	Session.vim	/^let s:l = 70 - ((34 * winheight(0) + 19) \/ 38)$/;"	v
+s:l	Session.vim	/^let s:l = 152 - ((3 * winheight(0) + 19) \/ 38)$/;"	v
+s:l	Session.vim	/^let s:l = 158 - ((10 * winheight(0) + 19) \/ 38)$/;"	v
+s:l	Session.vim	/^let s:l = 47 - ((35 * winheight(0) + 19) \/ 38)$/;"	v
+s:l	Session.vim	/^let s:l = 51 - ((3 * winheight(0) + 19) \/ 38)$/;"	v
+s:l	Session.vim	/^let s:l = 82 - ((3 * winheight(0) + 19) \/ 38)$/;"	v
 s:so_save	Session.vim	/^let s:so_save = &so | let s:siso_save = &siso | set so=0 siso=0$/;"	v
 s:sx	Session.vim	/^let s:sx = expand("<sfile>:p:r")."x.vim"$/;"	v
 s:wipebuf	Session.vim	/^  let s:wipebuf = bufnr('%')$/;"	v
