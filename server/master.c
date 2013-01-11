@@ -194,6 +194,7 @@ int main(int argc, char *argv[])
             event.data.fd = acsock;
             event.events = EPOLLIN;
             epoll_ctl(epollid, EPOLL_CTL_ADD, acsock, &event);
+            HandleRequest(acsock, ip);
         }
         else
         {

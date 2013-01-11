@@ -52,7 +52,9 @@ enum CMD {
     CLIP_DATA,   BACKUP,    FILETRANS,
     CLIP_DATA_R, BACKUP_R,  FILETRANS_R,
     UPDATE_BACKUP2,
-    UPDATE_BACKUP2_R
+    UPDATE_BACKUP2_R,
+    // slave to client
+    UPDATE_VERSION
 };
 
 typedef struct 
@@ -60,6 +62,7 @@ typedef struct
     int size;
     enum CMD cmd;
     int key;
+    int version;
 } DBPacketHeader;
 
 /*

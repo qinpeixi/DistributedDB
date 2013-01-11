@@ -1,32 +1,33 @@
 /*************************************************************************/
 /* Copyright (C) Network Programming -USTC, 2012                         */
 /*                                                                       */
-/*  File Name              :  client/dbclient.c                          */
+/*  File Name              :  server/slave.h                             */
 /*  Pricipal Author        :  qinpxi                                     */
 /*  Subsystem Name         :                                             */
 /*  Module Name            :                                             */
 /*  Language               :                                             */
 /*  Target Environment     :                                             */
-/*  Created Time           :  Thu 10 Jan 2013 07:39:12 PM CST            */
+/*  Created Time           :  Thu 10 Jan 2013 08:12:51 PM CST            */
 /*  Description            :                                             */
 /*************************************************************************/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include "inputcmd.h"
+#ifndef SLAVE_H
+#define SLAVE_H
 
-extern char *master_addr;
-extern int master_port;
+extern int listen_sock;
+extern int master_sock;
 
-int main(int argc, char *argv[])
-{
-    if (argc != 3)
-    {
-        printf("Address and port is needed.\n");
-        exit(-1);
-    }
-    master_addr = argv[1];
-    master_port =  atoi(argv[2]);
-    InputCmd();
-    return 0;
-}
+int InitialSlave(char *master_addr, int master_port);
+
+void HandleSlaveRequest(int accept_sock, char *szBuf);
+
+void HandleMasterRequest();
+
+void ShutDownSlave(int a);
+
+unsigned GetVersion();
+
+void SendSlaveList(int sockfd);
+
+#endif
+

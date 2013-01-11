@@ -5,7 +5,7 @@ ECHO = @
 
 TARGET = ddbclient ddbserver
 CLIENTSRC = $(wildcard ./client/*.c ./common/*.c)
-SERVERSRC = $(wildcard ./server/*.c ./common/*.c ./client/inputcmd.o ./client/parseinput.o)
+SERVERSRC = $(wildcard ./server/*.c ./common/*.c ./client/inputcmd.c ./client/parseinput.c)
 CLIENTOBJ = $(CLIENTSRC:.c=.o)
 SERVEROBJ = $(SERVERSRC:.c=.o)
 
@@ -14,14 +14,14 @@ TESTSRC   = $(wildcard ./test/*.c)
 TESTOBJ   = $(TESTSRC:.c=.o) ./server/tcDB.o ./common/dbProtocol.o ./server/MemoryDB.o \
 		./server/CircularQueue.o
 
-TESTGROUP = slave master
+TESTGROUP = master
 SLAVEOBJ  = ./common/dbProtocol.o ./common/Socket.o ./server/slave.o ./server/tcDB.o
 MASTEROBJ = ./common/dbProtocol.o ./common/Socket.o ./server/master.o
 
 RUBBISHFILES = find . -regex '.*\.gch\|.*~\|.*\..*db\|.*\.bac' -type f
 
-#all: $(TARGET)
-all: $(TESTGROUP)
+all: $(TARGET)
+#all: $(TESTGROUP)
 ddbclient: $(CLIENTOBJ)
 	$(ECHO) $(CXX) -o $@ $^ 
 ddbserver: $(SERVEROBJ)
@@ -30,6 +30,7 @@ ddbserver: $(SERVEROBJ)
 	$(ECHO) cp ddbserver ./server1/
 	$(ECHO) cp ddbserver ./server2/
 	$(ECHO) cp ddbserver ./server3/
+	cp ../a.db server1/
 
 test:   $(TESTOBJ) 
 	$(ECHO) $(CXX) -o ./test/testtcDB ./test/testtcDB.o ./server/tcDB.o -ltokyocabinet
@@ -57,7 +58,7 @@ master: $(MASTEROBJ)
 	$(ECHO) $(CXX) -c $(CXXFLAGS) $< -o $@
 
 clean:
-	@$(RM) $(CLIENTOBJ) $(SERVEROBJ) $(TARGET) $(TESTGROUP)
+	@$(RM) $(CLIENTOBJ) $(SERVEROBJ) $(TARGET) ./server1/ddbserver ./server2/ddbserver ./server3/ddbserver
 	@$(RM) -r ./server1/slave ./server2/slave ./server3/slave
 	@$(RUBBISHFILES) | xargs $(RM)
 	@$(RM) *.o

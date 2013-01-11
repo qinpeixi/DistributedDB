@@ -22,6 +22,7 @@
 #include "CircularQueue.h"
 #include "../common/dbProtocol.h"
 #include "../common/Database.h"
+#include "../client/inputcmd.h"
 
 #define THREADS_NUM 2
 
@@ -29,6 +30,7 @@
 
 sem_t MSG_SEM;
 pthread_t thread_id[THREADS_NUM];
+pthread_t cmd_thread_id;
 
 void HandleRequest(int id);
 
@@ -44,6 +46,7 @@ void InitThreads()
         //printf("The no.%d thread's id is %u\n", i, (int)thread_id[i]);
     }
 
+    pthread_create(&cmd_thread_id, NULL, (void*)InputCmd,(void*)i);
 }
 
 void KillThreads()

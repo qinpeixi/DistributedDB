@@ -19,6 +19,7 @@
 #include <signal.h>
 #include <assert.h>
 #include "ServerCtrl.h"
+#include "slave.h"
 #include "../common/dbProtocol.h"
 #include "../common/Socket.h"
 #include "../common/Database.h"
@@ -37,10 +38,26 @@ SlaveList slaves;
 int pos;  // This server's position in slaves.
 
 int master_sock;
-int listen_sock;
+//int listen_sock;
 char *addr;
 int port;
 pthread_t ctrl_thread_id;
+
+unsigned GetVersion()
+{
+    return slaves.version;
+}
+
+void SendSlaveList(int sockfd)
+{
+    DBPacketHeader hd;
+    hd.cmd = UPDATE_VERSION;
+    hd.version = slaves.version;
+    char szBuf[MAX_BUF_LEN] = "\0";
+    WriteHeader(szBuf, &hd);
+    Append(szBuf, (char *)&slaves, sizeof(slaves));
+    SendMsg(sockfd, szBuf);
+}
 
 DBPacketHeader* ExchangePacket(enum CMD cmd, int key, 
         const char *append_str, int len, int sockfd)
@@ -58,6 +75,7 @@ DBPacketHeader* ExchangePacket(enum CMD cmd, int key,
 
 void AddNewSlave(int pos, SlaveNode sn)
 {
+    printf("add node %d.\n", pos);
     int i;
     for (i=slaves.num-1; i>=pos; i--)
         slaves.nodes[i+1] = slaves.nodes[i];
@@ -68,6 +86,7 @@ void AddNewSlave(int pos, SlaveNode sn)
 
 void RemoveSlave(int pos)
 {
+    printf("remove node %d.\n", pos);
     int i;
     for (i=pos; i<slaves.num-1; i++)
         slaves.nodes[i] = slaves.nodes[i+1];
@@ -112,7 +131,7 @@ int SendFile(int sockfd, const char *filename, enum CMD rescmd)
         }
         finish_size += len;
     }
-    printf("Sending file complete.\n\n");
+    printf("Sending file complete.\n");
 
     return 0;
 }
@@ -147,7 +166,7 @@ int RecvFile(int sockfd, char *filename, int len)
     SendMsg(sockfd, szBuf);
 
     fclose(fp);
-    printf("Recving file complete.\n\n");
+    printf("Recving file complete.\n");
 
     return 0;
 }
@@ -239,22 +258,15 @@ int Notify2ndPreUpdateBackup2()
     return CommunicateToSlave(-2, UPDATE_BACKUP2, 0, UPDATE_BACKUP2_R);
 }
 
-void HandleSlaveRequest()
+void HandleSlaveRequest(int accept_sock, char *szBuf)
 {
-    int accept_sock;
-    int ip;
-    char szBuf[MAX_BUF_LEN] = "\0";
-    DBPacketHeader *phd;
-
-    ServiceStart(listen_sock, &accept_sock, &ip);
-    RecvMsg(accept_sock, szBuf);
-    phd = (DBPacketHeader *)szBuf;
+    DBPacketHeader *phd = (DBPacketHeader *)szBuf;
 
     switch (phd->cmd)
     {
         case CLIP_DATA:
             {
-                printf("CLIP_DATA\n");
+                printf("\nCLIP_DATA\n");
                 ExeShellCmd("mv", BACKUP1_DIR, "*", BACKUP2_DIR, "");
                 // split the data the new slave uses into file_tmp
                 int lower_b = slaves.nodes[(pos + 1)%slaves.num].key;
@@ -270,14 +282,14 @@ void HandleSlaveRequest()
             }
         case BACKUP:
             {
-                printf("BAKCUP\n");
+                printf("\nBAKCUP\n");
                 SendFile(accept_sock, file_master, BACKUP_R);
                 ServiceStop(accept_sock);
                 break;
             }
         case UPDATE_BACKUP2:
             {
-                printf("UPDATE_BACKUP2\n");
+                printf("\nUPDATE_BACKUP2\n");
                 char szBuf[MAX_BUF_LEN] = "\0";
                 // delete backup2
                 ExeShellCmd("rm", BACKUP2_DIR, "*", "", "");
@@ -306,6 +318,7 @@ void HandleSlaveRequest()
             {
             }
     }
+    ServiceStop(accept_sock);
 }
 
 void HandleMasterRequest()
@@ -321,12 +334,12 @@ void HandleMasterRequest()
     {
         case NEW_SLAVE:
             {
-                printf("NEW_SLAVE\n");
+                printf("\nNEW_SLAVE\n");
                 AddNewSlave(phd->key, *(SlaveNode *)GetAppend(phd));
                 printslaves(slaves);
                 if (phd->key <= pos)
                     pos = (pos + 1) % slaves.num;
-                printf("%d my no. : %d.\n", phd->key, pos);
+                printf("my no. : %d.\n", pos);
                 hd.cmd = NEW_SLAVE_R;
                 WriteHeader(szBuf, &hd);
                 SendMsg(master_sock, szBuf);
@@ -334,13 +347,12 @@ void HandleMasterRequest()
             }
         case RM_SLAVE:
             {
-                printf("RM_SLAVE\n");
+                printf("\nRM_SLAVE\n");
                 int rmpos = phd->key;
-                printf("remove node %d.\n", rmpos);
                 RemoveSlave(rmpos);
                 printslaves(slaves);
                 pos = (pos - 1 + slaves.num) % slaves.num;
-                printf("%d my no. : %d.\n", rmpos, pos);
+                printf("my no. : %d.\n", pos);
 
                 hd.cmd = RM_SLAVE_R;
                 WriteHeader(szBuf, &hd);
@@ -358,7 +370,6 @@ void HandleMasterRequest()
                     strcat(filename, BACKUP_POSTFIX);
                     Merge2Files(filename, file_master);
                 //    replace backup1 by backup2
-                    //ReplaceBackupByBackup(2, 1);
                     ExeShellCmd("mv", BACKUP2_DIR, "*", BACKUP1_DIR, "");
                 //    Backup data for 2nd-successor
                     BackupForOtherSlave(2);
@@ -392,40 +403,6 @@ void HandleMasterRequest()
 
 }
 
-void HandleCtrlRequest()
-{
-    int epollid;
-    struct epoll_event event;
-
-    epollid = epoll_create(1024);
-    event.data.fd = listen_sock;
-    event.events = EPOLLIN | EPOLLRDHUP;
-    epoll_ctl(epollid, EPOLL_CTL_ADD, listen_sock, &event);
-    event.data.fd = master_sock;
-    event.events = EPOLLIN | EPOLLRDHUP;
-    epoll_ctl(epollid, EPOLL_CTL_ADD, master_sock, &event);
-
-    while (1)
-    {
-        epoll_wait(epollid, &event, 1, -1);
-        if (event.data.fd == listen_sock)
-        {
-            printf("listen_sock.\n");
-            HandleSlaveRequest();
-        }
-        else if ((event.events & EPOLLIN) && (event.events & EPOLLRDHUP))
-        {
-            printf("Remote service shut down.\n");
-            CloseRemoteService(event.data.fd);
-        }
-        else if (event.data.fd == master_sock)
-        {
-            printf("master_sock.\n");
-            HandleMasterRequest(master_sock);
-        }
-    }
-}
-
 void RegisterAndLoadSlaves(int master_sock)
 {
     DBPacketHeader *phd = ExchangePacket(ADD_SLAVE, port, NULL, 0, master_sock);
@@ -435,7 +412,7 @@ void RegisterAndLoadSlaves(int master_sock)
     printslaves(slaves);
 }
 
-void ShutDown(int a)
+void ShutDownSlave(int a)
 {
     printf("Shut down.\n");
     pthread_cancel(ctrl_thread_id);
@@ -446,18 +423,11 @@ void ShutDown(int a)
     exit(0);
 }
 
-int main(int argc, char *argv[])
+int InitialSlave(char *master_addr, int master_port)
 {
-    if (argc != 3)
-    {
-        printf("Address and port is needed.\n");
-        exit(-1);
-    }
-
-    InitializeService(&listen_sock, NULL, 0);
     port = GetPort(listen_sock);
 
-    if (-1 == OpenRemoteService(&master_sock,  argv[1],  atoi(argv[2])))
+    if (-1 == OpenRemoteService(&master_sock,  master_addr,  master_port))
         return -1;
     RegisterAndLoadSlaves(master_sock);
 
@@ -478,12 +448,5 @@ int main(int argc, char *argv[])
         BackupForOtherSlave(2);
     }
 
-    pthread_create(&ctrl_thread_id, NULL, (void*)HandleCtrlRequest, NULL);
-
-    // catch ctrl+C 
-    signal(SIGINT, ShutDown);
-
-    while (1)
-        ;  // DB operating
     return 0;
 }

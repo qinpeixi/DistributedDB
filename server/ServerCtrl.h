@@ -44,6 +44,5 @@ void printslaves(SlaveList sl)
         printf("ip: %d port: %d key: %d\n", sl.nodes[i].ip, sl.nodes[i].port, 
                 sl.nodes[i].key);
     }
-    printf("\n");
 }
 #endif

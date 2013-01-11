@@ -21,6 +21,7 @@ void WriteHeader(char *buf, DBPacketHeader *header)
    hBuf->size = sizeof(DBPacketHeader);
    hBuf->cmd  = header->cmd;
    hBuf->key  = header->key;
+   hBuf->version = header->version;
 }
 
 DBPacketHeader *GetHeader(char *buf)
