@@ -77,6 +77,10 @@ dbValue DBGetKeyValue(DataBase hdb, dbKey key);
  */
 int DBDelKeyValue(DataBase hdb, dbKey key);
 
+int SplitByKey(char *srcfile, dbKey lower_bound, char *destfile, dbKey upper_bound);
+
+int Merge2Files(char *srcfile, char *destfile);
+
 /*
  * Get the last error message
  * input    : None

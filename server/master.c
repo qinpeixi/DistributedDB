@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <sys/epoll.h>
 #include <string.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -77,27 +78,36 @@ int AddToSlaveList(SlaveNode sn)
     return newpos;
 }
 
-void NotifyAll(int newpos)
+void DelFromSlaveList(int pos)
+{
+    int i;
+    for (i=pos; i<slaves.num-1; i++)
+        slaves.nodes[i] = slaves.nodes[i+1];
+    slaves.num --;
+    slaves.version ++;
+}
+
+void NotifyAll(int pos, enum CMD cmd, enum CMD rescmd)
 {
     char szBuf[MAX_BUF_LEN] = "\0";
     char szReplyMsg[MAX_BUF_LEN] = "\0";
     DBPacketHeader hd;
-    hd.cmd = NEW_SLAVE;
-    hd.key = newpos;
+    hd.cmd = cmd;
+    hd.key = pos;
     WriteHeader(szBuf, &hd);
-    Append(szBuf, (char *)&(slaves.nodes[newpos]), sizeof(SlaveNode));
+    Append(szBuf, (char *)&(slaves.nodes[pos]), sizeof(SlaveNode));
     int i;
     int sock;
     for (i=0; i<slaves.num; i++)
     {
-        if (i == newpos)
+        if (i == pos)
             continue;
         sock = slaves.nodes[i].sock;
         SendMsg(sock, szBuf);
         RecvMsg(sock, szReplyMsg);
         DBPacketHeader *phd = (DBPacketHeader *)szReplyMsg;
-        if (phd->cmd != NEW_SLAVE_R)
-            fprintf(stderr, "Receive NEW_SLAVE_R error.\n");
+        if (phd->cmd != rescmd)
+            fprintf(stderr, "Notify %d error.\n", i);
     }
 }
 
@@ -127,7 +137,7 @@ void HandleRequest(int sock, int ip)
                 SlaveNode sn = {ip, phd->key, sock};
                 int newpos = AddToSlaveList(sn);
                 printslaves(slaves);
-                NotifyAll(newpos);
+                NotifyAll(newpos, NEW_SLAVE, NEW_SLAVE_R);
                 hd.cmd = ADD_SLAVE_R;
                 hd.key = newpos;
                 WriteHeader(szReplyMsg, &hd);
@@ -136,11 +146,11 @@ void HandleRequest(int sock, int ip)
             }
         case DEL_SLAVE:
             {
-                // DelFromSlaveList(phd->key);
-                // printslaves(slaves);
-                // NotifyAll(phd->key);(RM_SLAVE)
-                // hd.cmd = DEL_SLAVE_R
-                // WriteHeader(szReplyMsg, &hd);
+                NotifyAll(phd->key, RM_SLAVE, RM_SLAVE_R);
+                DelFromSlaveList(phd->key);
+                printslaves(slaves);
+                hd.cmd = DEL_SLAVE_R;
+                WriteHeader(szReplyMsg, &hd);
                 break;
             }
         default:
@@ -157,24 +167,40 @@ void HandleRequest(int sock, int ip)
 
 int main(int argc, char *argv[])
 {
-    int listensock;
+    int epollid;
+    struct epoll_event event;
+    int listen_sock;
     int acsock;
     int ip;
     //pthread_t heart_thread_id;
 
-    if (-1 == InitializeService(&listensock, NULL, 5001))
+    if (-1 == InitializeService(&listen_sock, NULL, 5001))
         return -1;
 
     slaves.num = 0;
     slaves.version = 0;
 
+    epollid = epoll_create(1024);
+    event.data.fd = listen_sock;
+    event.events = EPOLLIN | EPOLLRDHUP;
+    epoll_ctl(epollid, EPOLL_CTL_ADD, listen_sock, &event);
+
     while (1)
     {
-        ServiceStart(listensock, &acsock, &ip);
-        if (acsock != -1)
-            HandleRequest(acsock, ip);
+        epoll_wait(epollid, &event, 1, -1);
+        if (event.data.fd == listen_sock)
+        {
+            ServiceStart(listen_sock, &acsock, &ip);
+            event.data.fd = acsock;
+            event.events = EPOLLIN;
+            epoll_ctl(epollid, EPOLL_CTL_ADD, acsock, &event);
+        }
+        else
+        {
+            HandleRequest(event.data.fd, ip);
+        }
     }
 
-    ShutdownService(listensock);
+    ShutdownService(listen_sock);
 
 }

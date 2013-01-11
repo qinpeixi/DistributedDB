@@ -1,11 +1,11 @@
 
 CXX = gcc
-CXXFLAGS = -O2 -Wall -g
+CXXFLAGS = -Wall -g
 ECHO = @
 
 TARGET = ddbclient ddbserver
 CLIENTSRC = $(wildcard ./client/*.c ./common/*.c)
-SERVERSRC = $(wildcard ./server/*.c ./common/*.c)
+SERVERSRC = $(wildcard ./server/*.c ./common/*.c ./client/inputcmd.o ./client/parseinput.o)
 CLIENTOBJ = $(CLIENTSRC:.c=.o)
 SERVEROBJ = $(SERVERSRC:.c=.o)
 
@@ -15,7 +15,7 @@ TESTOBJ   = $(TESTSRC:.c=.o) ./server/tcDB.o ./common/dbProtocol.o ./server/Memo
 		./server/CircularQueue.o
 
 TESTGROUP = slave master
-SLAVEOBJ  = ./common/dbProtocol.o ./common/Socket.o ./server/slave.o
+SLAVEOBJ  = ./common/dbProtocol.o ./common/Socket.o ./server/slave.o ./server/tcDB.o
 MASTEROBJ = ./common/dbProtocol.o ./common/Socket.o ./server/master.o
 
 RUBBISHFILES = find . -regex '.*\.gch\|.*~\|.*\..*db\|.*\.bac' -type f
@@ -23,7 +23,7 @@ RUBBISHFILES = find . -regex '.*\.gch\|.*~\|.*\..*db\|.*\.bac' -type f
 #all: $(TARGET)
 all: $(TESTGROUP)
 ddbclient: $(CLIENTOBJ)
-	$(ECHO) $(CXX) -o $@ $^
+	$(ECHO) $(CXX) -o $@ $^ 
 ddbserver: $(SERVEROBJ)
 	$(ECHO) $(CXX) -o $@ $^ -ltokyocabinet
 	#$(ECHO) mkdir server1 server2 server3
@@ -43,7 +43,7 @@ test:   $(TESTOBJ)
 
 testgroup: $(TESTGROUP)
 slave:	$(SLAVEOBJ)
-	$(ECHO) $(CXX) -o $@ $^ -lpthread
+	$(ECHO) $(CXX) -o $@ $^ -lpthread -ltokyocabinet
 master: $(MASTEROBJ)
 	$(ECHO) $(CXX) -o $@ $^ -ltokyocabinet
 	#$(ECHO) mkdir server1 server2 server3
@@ -51,6 +51,7 @@ master: $(MASTEROBJ)
 	$(ECHO) cp slave ./server2/
 	$(ECHO) cp slave ./server3/
 	rm slave
+	cp ../a.db server1/
 
 .c.o:
 	$(ECHO) $(CXX) -c $(CXXFLAGS) $< -o $@

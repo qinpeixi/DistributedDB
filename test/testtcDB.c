@@ -12,6 +12,8 @@
 /*************************************************************************/
 
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include <assert.h>
 #include "../common/Database.h"
 
@@ -30,6 +32,42 @@ int main()
     assert(getvalue != NULL);
     ret = DBDelKeyValue(hdb, key);
     assert(ret == 0);
+
+    int i;
+    char value[10];
+
+    DataBase db = DBCreate("a.db");
+/*    for (i=0; i<100; i++)
+    {
+        sprintf(value, "%d", i); 
+        DBSetKeyValue(db, i, value);
+    }
+    SplitByKey("a.db", 50, "a.db~", 100);
+    for (i=0; i<50; i++)
+    {
+        char *v = DBGetKeyValue(db, i);
+        dbKey k;
+        sscanf(v, "%d", &k);
+        assert(i == k);
+        free (v);
+    }
+    DBDelete(db);
+    db = DBCreate("a.db~");
+    for (i=50; i<100; i++)
+    {
+        char *v = DBGetKeyValue(db, i);
+        dbKey k;
+        sscanf(v, "%d", &k);
+        assert(i == k);
+        free(v);
+    }
+    DBDelete(db);
+    db = DBCreate("a.db");
+*/    for (i=0; i<4000; i++)
+    {
+        sprintf(value, "%d", i);
+        DBSetKeyValue(db, i, value);
+    }
     printf("Test of tcDB.c                : PASS\n");
     return 0;
 }

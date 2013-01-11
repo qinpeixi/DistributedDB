@@ -147,6 +147,75 @@ int DBDelKeyValue(DataBase db, dbKey key)
     return SUCCESS;
 }
 
+int SplitByKey(char *srcfile, dbKey lower_bound, char *destfile, dbKey upper_bound)
+{
+    printf("split %s, %s\n", srcfile, destfile);
+    OpenedDB *podb1 = DBCreate(srcfile);
+    OpenedDB *podb2 = DBCreate(destfile);
+    TCHDB *srchdb = podb1->hdb;
+    TCHDB *desthdb = podb2->hdb;
+    long sum = (long) tchdbrnum(srchdb);
+    int i;
+    if (!tchdbiterinit(srchdb))
+    {
+        int ecode = tchdbecode(srchdb);
+        fprintf(stderr, "Iterator initialize error: %s\n", tchdberrmsg(ecode));
+        SetLastErrorMsg(tchdberrmsg(ecode));
+        return FAILURE;
+    }
+
+    int bl = upper_bound > lower_bound;
+    for (i=0; i<sum; i++)
+    {
+        int ksize = -1;
+        dbKey key = *(dbKey *)tchdbiternext(srchdb, &ksize);
+        int valueLen = -1;
+        if ((bl && lower_bound < key && key <= upper_bound)
+                || (!bl && ((lower_bound < key) || (key <= upper_bound))))
+        {
+            dbValue value = (dbValue)tchdbget(srchdb, &key, sizeof(dbKey), &valueLen);
+            tchdbput(desthdb, &key, sizeof(dbKey), value, strlen(value)+1);
+            tchdbout(srchdb, &key, sizeof(dbKey));
+            free(value);
+        }
+    }
+
+    DBDelete(podb1);
+    DBDelete(podb2);
+    return SUCCESS;
+}
+
+int Merge2Files(char *srcfile, char *destfile)
+{
+    printf("merge %s, %s\n", srcfile, destfile);
+    OpenedDB *podb1 = DBCreate(srcfile);
+    OpenedDB *podb2 = DBCreate(destfile);
+    TCHDB *srchdb = podb1->hdb;
+    TCHDB *desthdb = podb2->hdb;
+    long sum = (long) tchdbrnum(srchdb);
+    int i;
+    if (!tchdbiterinit(srchdb))
+    {
+        int ecode = tchdbecode(srchdb);
+        fprintf(stderr, "Iterator initialize error: %s\n", tchdberrmsg(ecode));
+        SetLastErrorMsg(tchdberrmsg(ecode));
+        return FAILURE;
+    }
+
+    for (i=0; i<sum; i++)
+    {
+        int ksize = -1;
+        dbKey key = *(dbKey *)tchdbiternext(srchdb, &ksize);
+        int valueLen = -1;
+        dbValue value = (dbValue)tchdbget(srchdb, &key, sizeof(dbKey), &valueLen);
+        tchdbput(desthdb, &key, sizeof(dbKey), value, strlen(value)+1);
+        tchdbout(srchdb, &key, sizeof(dbKey));
+        free(value);
+    }
+
+    return SUCCESS;
+}
+
 static char lasterr[1024];
 void SetLastErrorMsg(const char *msg)
 {

@@ -78,7 +78,7 @@ int ServiceStart(int listen_sock, int *accept_sock, int *ip)
     }
 
     *ip = *(int*)&sa.sin_addr;
-    printf("accept from:%s\n", inet_ntoa(sa.sin_addr));
+    //printf("accept from:%s\n", inet_ntoa(sa.sin_addr));
     return 0;
 }
 

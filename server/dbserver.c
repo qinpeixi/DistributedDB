@@ -18,9 +18,13 @@
 #include "serversocket.h"
 #include "CircularQueue.h"
 #include "HandleRequest.h"
+#include "../common/Database.h"
+#include "../client/inputcmd.h"
 
 int main(int argc, char *argv[])
 {
+    InputCmd();
+/*
     int listen_sock;
     int epollid;
     struct epoll_event event;
@@ -79,6 +83,6 @@ int main(int argc, char *argv[])
     sem_destroy(&MSG_SEM);
     KillThreads();
     DBShutdownService(listen_sock);
-
+*/
     return 0;
 }
