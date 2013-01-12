@@ -18,6 +18,8 @@
 
 #define MAX_INPUT_LEN 1024
 
+extern char *DBName;
+
 /*
  * parse the input and then call dbapi to execute
  * input        : input

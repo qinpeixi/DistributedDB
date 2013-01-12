@@ -133,12 +133,13 @@ void SendMsg(int sockfd, char *buf)
         perror("send");
 }
 
-void RecvMsg(int sockfd, char *buf)
+int RecvMsg(int sockfd, char *buf)
 {
     assert(sockfd != -1);
     int res = recv(sockfd, buf, MAX_BUF_LEN, 0);
-    if (res == -1)
+    if (res < 0)
         perror("receive");
+    return res;
 }
 
 int GetPort(int sockfd)

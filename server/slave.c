@@ -27,11 +27,9 @@
 #define BACKUP1_DIR     "backup1"
 #define BACKUP2_DIR     "backup2"
 #define BACKUP_POSTFIX  ".bac"
-//#define FILE_TO_SEND    "a.db~"
-//#define FILE_MASTER     "a.db"
 #define MAX_FILENAME_LEN 128
 
-char file_tmp[MAX_FILENAME_LEN] = "a.db~";
+char file_tmp[MAX_FILENAME_LEN] = "a.db~"; 
 char file_master[MAX_FILENAME_LEN] = "a.db";
 
 SlaveList slaves;
@@ -73,6 +71,7 @@ DBPacketHeader* ExchangePacket(enum CMD cmd, int key,
     return (DBPacketHeader *)szBuf;
 }
 
+
 void AddNewSlave(int pos, SlaveNode sn)
 {
     printf("add node %d.\n", pos);
@@ -110,7 +109,7 @@ int SendFile(int sockfd, const char *filename, enum CMD rescmd)
     int flen = ftell(fp);
 
     DBPacketHeader *phd = 
-        ExchangePacket(rescmd, flen, filename, strlen(filename)+1, sockfd);
+        ExchangePacket(rescmd, flen, file_master, strlen(file_master)+1, sockfd);
     if (phd->cmd != FILETRANS_R)
     {
         fprintf(stderr, "File info transfer failed.\n");
@@ -272,11 +271,12 @@ void HandleSlaveRequest(int accept_sock, char *szBuf)
                 int lower_b = slaves.nodes[(pos + 1)%slaves.num].key;
                 int upper_b = slaves.nodes[(pos + 2)%slaves.num].key;
                 printf("clip after %d.\n", phd->key);
-                ExeShellCmd("mv", "", file_master, "", file_tmp);
-                SplitByKey(file_tmp, lower_b, file_master, upper_b);
-                SendFile(accept_sock, file_master, CLIP_DATA_R);
-                ExeShellCmd("cp", "", file_master, BACKUP1_DIR, file_master);
-                ExeShellCmd("mv", "", file_tmp, "", file_master);
+                //ExeShellCmd("mv", "", file_master, "", file_tmp);
+                //SplitByKey(file_tmp, lower_b, file_master, upper_b);
+                SplitByKey(file_master, lower_b, file_tmp, upper_b);
+                SendFile(accept_sock, file_tmp, CLIP_DATA_R);
+                ExeShellCmd("mv", "", file_tmp, BACKUP1_DIR, file_master);
+                //ExeShellCmd("mv", "", file_tmp, "", file_master);
                 ServiceStop(accept_sock);
                 break;
             }
@@ -351,7 +351,8 @@ void HandleMasterRequest()
                 int rmpos = phd->key;
                 RemoveSlave(rmpos);
                 printslaves(slaves);
-                pos = (pos - 1 + slaves.num) % slaves.num;
+                if (rmpos < pos)
+                    pos = (pos - 1 + slaves.num) % slaves.num;
                 printf("my no. : %d.\n", pos);
 
                 hd.cmd = RM_SLAVE_R;

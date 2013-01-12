@@ -62,7 +62,6 @@ int Parse(char *input)
         GetMatch("\\b\\w{3,5}\\b", s, match);
         if (0 == strcasecmp(match, "open"))
         {
-            extern char *DBName;
             if (hdb != NULL)
             {
                 fprintf(stderr, "Please close current database first.\n");

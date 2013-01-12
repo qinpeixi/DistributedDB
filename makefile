@@ -4,7 +4,7 @@ CXXFLAGS = -Wall -g
 ECHO = @
 
 TARGET = ddbclient ddbserver
-CLIENTSRC = $(wildcard ./client/*.c ./common/*.c)
+CLIENTSRC = $(wildcard ./client/*.c ./common/*.c ./server/printslave.c)
 SERVERSRC = $(wildcard ./server/*.c ./common/*.c ./client/inputcmd.c ./client/parseinput.c)
 CLIENTOBJ = $(CLIENTSRC:.c=.o)
 SERVEROBJ = $(SERVERSRC:.c=.o)

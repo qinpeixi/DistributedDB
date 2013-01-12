@@ -22,8 +22,15 @@
 #include "../common/Database.h"
 #include "../common/dbProtocol.h"
 #include "slave.h"
+#include "master.h"
 
 int listen_sock;
+
+void ShutDown(int a)
+{
+    ShutDownSlave(a);
+    DBServiceStop(listen_sock);
+}
 
 int main(int argc, char *argv[])
 {
@@ -33,8 +40,10 @@ int main(int argc, char *argv[])
 
     if (argc != 3)
     {
-        printf("Address and port is needed.\n");
-        exit(-1);
+        printf("Master process.\n");
+        MasterProcess();
+        //printf("Address and port is needed.\n");
+        //exit(-1);
     }
 
     if (-1 == DBInitializeService(&listen_sock, NULL, 0))
@@ -87,6 +96,7 @@ int main(int argc, char *argv[])
             else if (phd->version < GetVersion() && phd->cmd != OPEN &&
                     phd->cmd != CLOSE)
             {
+                printf("Update client's slave list.\n");
                 SendSlaveList(event.data.fd);
             }
             else

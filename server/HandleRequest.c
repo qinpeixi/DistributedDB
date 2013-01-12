@@ -25,6 +25,7 @@
 #include "../client/inputcmd.h"
 
 #define THREADS_NUM 2
+#define MAX_FILENAME_LEN 128
 
 #define pdebug printf
 
@@ -32,14 +33,17 @@ sem_t MSG_SEM;
 pthread_t thread_id[THREADS_NUM];
 pthread_t cmd_thread_id;
 
-void HandleRequest(int id);
+extern char file_tmp[MAX_FILENAME_LEN]; 
+extern char file_master[MAX_FILENAME_LEN];
+
+void HandleDBRequest(int id);
 
 void InitThreads()
 {
     int i;
     for (i=0; i<THREADS_NUM; i++)
     {
-        if (0 != pthread_create(&thread_id[i], NULL, (void*)HandleRequest,(void*)i))
+        if (0 != pthread_create(&thread_id[i], NULL, (void*)HandleDBRequest,(void*)i))
         {
             perror("create thread");
         }
@@ -58,7 +62,7 @@ void KillThreads()
     //pthread_mutex_destroy(&DBMUTEX);
 }
 
-void HandleRequest(int id)
+void HandleDBRequest(int id)
 {
     char szReplyMsg[MAX_BUF_LEN] = "\0";
     DataBase hdb; 
@@ -76,13 +80,17 @@ void HandleRequest(int id)
         hcsock = pnode->hcsock;
         hdb = pnode->hcsock.app; // will be changed only when 'OPEN'
         precvhd = (DBPacketHeader *)pnode->buf;
-        pdebug("Thread %u received:\n", id);
+        pdebug("\nThread %u received:\n", id);
         debug(precvhd);
 
         switch (precvhd->cmd)
         {
             case OPEN:
                 {
+                    printf("Open %s\n", GetAppend(precvhd));
+                    strcpy(file_master, GetAppend(precvhd));
+                    strcpy(file_tmp, GetAppend(precvhd));
+                    strcat(file_tmp, "~");
                     hdb = DBCreate(GetAppend(precvhd));
                     hcsock.app = hdb;
                     if (hdb == NULL)
@@ -93,6 +101,7 @@ void HandleRequest(int id)
                 }
             case CLOSE:
                 {
+                    printf("Close\n");
                     int res = DBDelete(hdb);
                     if (res != 0)
                         sendhd.cmd = CMDFAIL;
@@ -102,6 +111,7 @@ void HandleRequest(int id)
                 }
             case SET:
                 {
+                    printf("Set %d:%s\n", precvhd->key, GetAppend(precvhd));
                     if (0 != DBSetKeyValue(hdb, precvhd->key, GetAppend(precvhd)))
                         sendhd.cmd = CMDFAIL;
                     else
@@ -110,6 +120,7 @@ void HandleRequest(int id)
                 }
             case GET:
                 {
+                    printf("Get %d\n", precvhd->key);
                     strAppend = DBGetKeyValue(hdb, precvhd->key);
                     if (strAppend == NULL)
                         sendhd.cmd = CMDFAIL;
@@ -119,6 +130,7 @@ void HandleRequest(int id)
                 }
             case DEL:
                 {
+                    printf("Del %d\n", precvhd->key);
                     if (0 != DBDelKeyValue(hdb, precvhd->key))
                         sendhd.cmd = CMDFAIL;
                     else

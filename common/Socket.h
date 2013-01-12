@@ -38,7 +38,7 @@ void CloseRemoteService(int sockfd);
 
 void SendMsg(int sockfd, char *buf);
 
-void RecvMsg(int sockfd, char *buf);
+int RecvMsg(int sockfd, char *buf);
 
 int GetPort(int sockfd);
 

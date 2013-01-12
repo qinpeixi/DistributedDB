@@ -21,6 +21,7 @@
 #include "ServerCtrl.h"
 #include "../common/Socket.h"
 #include "../common/dbProtocol.h"
+#include "master.h"
 
 SlaveList slaves;
 
@@ -117,7 +118,6 @@ void HandleRequest(int sock, int ip)
     char szReplyMsg[MAX_BUF_LEN] = "\0";
     DBPacketHeader *phd;
     DBPacketHeader hd;
-    printf("HandleRequest.\n");
 
     RecvMsg(sock, szBuf);
     phd = (DBPacketHeader *)szBuf;
@@ -127,6 +127,7 @@ void HandleRequest(int sock, int ip)
     {
         case GET_LIST:
             {
+                printf("\nGET_LIST\n");
                 hd.cmd = GET_LIST_R;
                 WriteHeader(szReplyMsg, &hd);
                 Append(szReplyMsg, (char *)&slaves, sizeof(slaves));
@@ -134,6 +135,7 @@ void HandleRequest(int sock, int ip)
             }
         case ADD_SLAVE:
             {
+                printf("\nADD_SLAVE\n");
                 SlaveNode sn = {ip, phd->key, sock};
                 int newpos = AddToSlaveList(sn);
                 printslaves(slaves);
@@ -146,6 +148,7 @@ void HandleRequest(int sock, int ip)
             }
         case DEL_SLAVE:
             {
+                printf("\nDEL_SLAVE\n");
                 NotifyAll(phd->key, RM_SLAVE, RM_SLAVE_R);
                 DelFromSlaveList(phd->key);
                 printslaves(slaves);
@@ -165,7 +168,14 @@ void HandleRequest(int sock, int ip)
         ServiceStop(sock);
 }
 
-int main(int argc, char *argv[])
+void ShutDownMaster()
+{
+    printf("Shut down.\n");
+    exit(0);
+}
+
+//int main(int argc, char *argv[])
+int MasterProcess()
 {
     int epollid;
     struct epoll_event event;

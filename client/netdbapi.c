@@ -34,7 +34,7 @@ typedef SlaveList CloudNode;
 int master_sock;
 char *master_addr;
 int master_port;
-char DBName[1024];
+char DBName_api[1024];
 
 DBPacketHeader* ExchangePacket(enum CMD cmd, int key, 
         const char *append_str, int len, int sockfd)
@@ -63,14 +63,23 @@ int ReadCloudNodes(SlaveList *slaves)
     return 0;
 }
 
-DataBase OpenAllCloudNodes(char *buf)
+int OpenAllCloudNodes(SlaveList *slaves)
 {
     /* establish a connection with server */
     //CloudNode *slaves->nodes = malloc(NODES_NUM * sizeof(CloudNode));
     //CloudNode *slaves->nodes = slaves;
     //ReadCloudNodes(slaves->nodes);
-    SlaveList *slaves = malloc(sizeof(SlaveList));
+    //SlaveList *slaves = malloc(sizeof(SlaveList));
     ReadCloudNodes(slaves);
+    /* write data using protocol */
+    DBPacketHeader hd;
+    char buf[MAXPACKETLEN];
+    hd.cmd = OPEN;
+    hd.version = 0;
+    WriteHeader(buf, &hd);
+    Append(buf, DBName_api, strlen(DBName_api) + 1);
+    debug(buf);
+
     int i;
     char recvBuf[MAXPACKETLEN];
     for (i=0; i<NODES_NUM; i++)
@@ -78,7 +87,7 @@ DataBase OpenAllCloudNodes(char *buf)
         if (-1 == OpenRemoteService2(&(slaves->nodes[i].sock), slaves->nodes[i].ip, slaves->nodes[i].port))
         {
             fprintf(stderr, "Open remote service failed.\n");
-            return NULL;
+            return -1;
         }
         /* send server the command */
         SendMsg(slaves->nodes[i].sock, buf);
@@ -88,20 +97,29 @@ DataBase OpenAllCloudNodes(char *buf)
         if (phd->cmd != OPEN_R)
         {
             fprintf(stderr, "Receive error:%s\n", GetAppend(phd));
-            return NULL;
+            return -1;
         }
     }
 
-    return (DataBase)slaves;
+    return 0;
 }
 
-int CloseAllCloudNodes(DataBase hdb, char *buf)
+int CloseAllCloudNodes(DataBase hdb, int except_sock)
 {
+    DBPacketHeader hd;
+    char buf[MAXPACKETLEN];
     CloudNode *slaves= (CloudNode *)hdb;
+
+    hd.cmd = CLOSE;
+    hd.version = slaves->version;
+    WriteHeader(buf, &hd);
+
     int i;
     char recvBuf[MAXPACKETLEN];
     for (i=0; i<NODES_NUM; i++)
     {
+        if (slaves->nodes[i].sock == except_sock)
+            continue;
         SendMsg(slaves->nodes[i].sock, buf);
         RecvMsg(slaves->nodes[i].sock, recvBuf);
 
@@ -114,7 +132,6 @@ int CloseAllCloudNodes(DataBase hdb, char *buf)
 
         CloseRemoteService(slaves->nodes[i].sock);
     }
-    free(slaves);
 
     return 0;
 }
@@ -123,38 +140,53 @@ int CloseAllCloudNodes(DataBase hdb, char *buf)
 int *GetSocket(DataBase hdb, dbKey key)
 {
     CloudNode *slaves = (CloudNode *)hdb;
-    int index = key % NODES_NUM;
+    int index = slaves->num;
+    int i;
+    key = key % MAX_KEY;
+    for (i=0; i<slaves->num; i++)
+    {
+        int lower_b = slaves->nodes[i].key;
+        int upper_b = slaves->nodes[(i + 1) % slaves->num].key;
+        printf("lower_b:%d  upper_b:%d\n", lower_b, upper_b);
+        if (lower_b < upper_b && lower_b < key && key <= upper_b)
+        {
+            index = i;
+            break;
+        }
+        else if (lower_b > upper_b && (lower_b < key || key <= upper_b))
+        {
+            index = i;
+            break;
+        }
+        else if (lower_b == upper_b)
+        {
+            index = i;
+            break;
+        }
+    }
+    assert(index != slaves->num);
     //printf("Send to %d:%d\n", index, slaves->nodes[index].port);
     return &(slaves->nodes[index].sock);
 }
 
 DataBase DBCreate(char *dbName)
 {
-    DBPacketHeader hd;
-    char buf[MAXPACKETLEN];
 
-    strcpy(DBName, dbName);
-    /* write data using protocol */
-    hd.cmd = OPEN;
-    hd.version = 0;
-    WriteHeader(buf, &hd);
-    Append(buf, dbName, strlen(dbName) + 1);
-    debug(buf);
-    
-    return OpenAllCloudNodes(buf);
+    if (DBName_api != dbName)
+        strcpy(DBName_api, dbName);
+    SlaveList *slaves = malloc(sizeof(SlaveList));
+   
+    if (-1 == OpenAllCloudNodes(slaves))
+        return NULL;
+
+    return (DataBase)slaves;
 }
 
 int DBDelete(DataBase hdb)
 {
-    DBPacketHeader hd;
-    CloudNode *slaves= (CloudNode *)hdb;
-    char buf[MAXPACKETLEN];
-
-    hd.cmd = CLOSE;
-    hd.version = slaves->version;
-    WriteHeader(buf, &hd);
-
-    return CloseAllCloudNodes(hdb, buf);
+    int res = CloseAllCloudNodes(hdb, -1);
+    free(hdb);
+    return res;
 }
 
 int DBSetKeyValue(DataBase hdb, dbKey key, dbValue value)
@@ -164,7 +196,7 @@ int DBSetKeyValue(DataBase hdb, dbKey key, dbValue value)
     char buf[MAXPACKETLEN];
     int *psock;
 REDO:
-    psock = GetSocket(hdb, key);
+    psock = GetSocket(slaves, key);
 
     hd.cmd = SET;
     hd.key = key;
@@ -173,15 +205,19 @@ REDO:
     Append(buf, value, strlen(value) + 1);
 
     SendMsg(*psock, buf);
-    RecvMsg(*psock, buf);
+    int res = RecvMsg(*psock, buf);
+    if (res <= 0)
+    {
+        CloseAllCloudNodes(slaves, *psock);
+        OpenAllCloudNodes(slaves);
+        goto REDO;
+    }
 
     DBPacketHeader *phd = GetHeader(buf);
     if (phd->cmd == UPDATE_VERSION)
     {
-        DBDelete(hdb);
-        *slaves = *(SlaveList *)GetAppend(phd);
-        printslaves(*slaves);
-        DBCreate(DBName);
+        CloseAllCloudNodes(slaves, -1);
+        OpenAllCloudNodes(slaves);
         goto REDO;
     }
     else if (phd->cmd == CMDFAIL)
@@ -200,7 +236,7 @@ dbValue DBGetKeyValue(DataBase hdb, dbKey key)
     char buf[MAXPACKETLEN];
     int *psock;
 REDO:
-    psock = GetSocket(hdb, key);
+    psock = GetSocket(slaves, key);
 
     hd.cmd = GET;
     hd.key = key;
@@ -208,15 +244,19 @@ REDO:
     WriteHeader(buf, &hd);
 
     SendMsg(*psock, buf);
-    RecvMsg(*psock, buf);
+    int res = RecvMsg(*psock, buf);
+    if (res <= 0)
+    {
+        CloseAllCloudNodes(slaves, *psock);
+        OpenAllCloudNodes(slaves);
+        goto REDO;
+    }
 
     DBPacketHeader *phd = GetHeader(buf);
     if (phd->cmd == UPDATE_VERSION)
     {
-        DBDelete(hdb);
-        *slaves = *(SlaveList *)GetAppend(phd);
-        printslaves(*slaves);
-        DBCreate(DBName);
+        CloseAllCloudNodes(slaves, -1);
+        OpenAllCloudNodes(slaves);
         goto REDO;
     }
     else if (phd->cmd == CMDFAIL)
@@ -235,7 +275,7 @@ int DBDelKeyValue(DataBase hdb, dbKey key)
     char buf[MAXPACKETLEN];
     int *psock;
 REDO:
-    psock = GetSocket(hdb, key);
+    psock = GetSocket(slaves, key);
 
     hd.cmd = DEL;
     hd.key = key;
@@ -243,15 +283,19 @@ REDO:
     WriteHeader(buf, &hd);
 
     SendMsg(*psock, buf);
-    RecvMsg(*psock, buf);
+    int res = RecvMsg(*psock, buf);
+    if (res <= 0)
+    {
+        CloseAllCloudNodes(slaves, *psock);
+        OpenAllCloudNodes(slaves);
+        goto REDO;
+    }
 
     DBPacketHeader *phd = GetHeader(buf);
     if (phd->cmd == UPDATE_VERSION)
     {
-        DBDelete(hdb);
-        *slaves = *(SlaveList *)GetAppend(phd);
-        printslaves(*slaves);
-        DBCreate(DBName);
+        CloseAllCloudNodes(slaves, -1);
+        OpenAllCloudNodes(slaves);
         goto REDO;
     }
     else if (phd->cmd == CMDFAIL)
