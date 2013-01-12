@@ -18,12 +18,35 @@
 #include <string.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <signal.h>
+#include <errno.h>
+#include <sys/time.h>
+#include <assert.h>
+#include <unistd.h>
 #include "ServerCtrl.h"
 #include "../common/Socket.h"
 #include "../common/dbProtocol.h"
 #include "master.h"
 
+#define UPDATE_BAKCUP_SECOND 5
+
 SlaveList slaves;
+
+extern DBPacketHeader* ExchangePacket(enum CMD cmd, int key, 
+        const char *append_str, int len, int sockfd);
+/*DBPacketHeader* ExchangePacket(enum CMD cmd, int key, 
+        const char *append_str, int len, int sockfd)
+{
+    static char szBuf[MAX_BUF_LEN] = "\0";
+    DBPacketHeader hd;
+    hd.cmd = cmd;
+    hd.key = key;
+    WriteHeader(szBuf, &hd);
+    Append(szBuf, append_str, len);
+    SendMsg(sockfd, szBuf);
+    RecvMsg(sockfd, szBuf);
+    return (DBPacketHeader *)szBuf;
+}*/
 
 int GetLength(int pos)
 {
@@ -174,6 +197,17 @@ void ShutDownMaster()
     exit(0);
 }
 
+void UpdateBackup(int sig)
+{
+    static int pos = 0;
+    pos = (pos + 1) % slaves.num;
+    DBPacketHeader *phd = ExchangePacket(UPDATE_BACKUP12, 0, NULL, 0, 
+            slaves.nodes[pos].sock);
+    if (phd->cmd != UPDATE_BACKUP12_R)
+        fprintf(stderr, "No.%d slave update backup error.\n", pos);
+    alarm(UPDATE_BAKCUP_SECOND);
+}
+
 //int main(int argc, char *argv[])
 int MasterProcess()
 {
@@ -186,6 +220,17 @@ int MasterProcess()
 
     if (-1 == InitializeService(&listen_sock, NULL, 5001))
         return -1;
+
+    signal(SIGALRM, UpdateBackup);
+    alarm(UPDATE_BAKCUP_SECOND);
+    /*struct itimerval itv;
+    struct itimerval olditv;
+    itv.it_interval.tv_sec = UPDATE_BAKCUP_SECOND;
+    itv.it_interval.tv_usec = 0;
+    itv.it_value.tv_sec = UPDATE_BAKCUP_SECOND;
+    itv.it_value.tv_usec = 0;
+    setitimer(ITIMER_REAL, &itv, &olditv);
+    */
 
     slaves.num = 0;
     slaves.version = 0;
@@ -208,7 +253,13 @@ int MasterProcess()
         }
         else
         {
-            HandleRequest(event.data.fd, ip);
+            if (errno == EINTR)
+                printf("Alarm\n");
+            else
+            {
+                printf("slave request.\n");
+                HandleRequest(event.data.fd, ip);
+            }
         }
     }
 

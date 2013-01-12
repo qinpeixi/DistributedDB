@@ -21,7 +21,7 @@
 typedef struct
 {
     int ip;
-    int port; // can not known yet
+    int port; 
     int sock;
     int key; // The key that the slave uses.
 } SlaveNode;

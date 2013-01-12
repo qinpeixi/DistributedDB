@@ -46,8 +46,8 @@ enum CMD {
     ADD_SLAVE_R, DEL_SLAVE_R, 
     HEARTBEAT,    
     // master to slave
-    NEW_SLAVE,   RM_SLAVE,
-    NEW_SLAVE_R, RM_SLAVE_R, 
+    NEW_SLAVE,   RM_SLAVE,    UPDATE_BACKUP12,
+    NEW_SLAVE_R, RM_SLAVE_R,  UPDATE_BACKUP12_R,
     // slave to slave
     CLIP_DATA,   BACKUP,    FILETRANS,
     CLIP_DATA_R, BACKUP_R,  FILETRANS_R,

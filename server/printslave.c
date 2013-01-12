@@ -23,7 +23,8 @@ void printslaves(SlaveList sl)
     printf("version: %u\n", sl.version);
     for (i=0; i<sl.num; i++)
     {
-        printf("ip: %d port: %d key: %d\n", sl.nodes[i].ip, sl.nodes[i].port, 
-                sl.nodes[i].key);
+        printf("ip: %s port: %d key: %d\n", 
+                inet_ntoa(*(struct in_addr *)&(sl.nodes[i].ip)), 
+                sl.nodes[i].port, sl.nodes[i].key);
     }
 }

@@ -18,6 +18,7 @@
 #include <sys/epoll.h>
 #include <signal.h>
 #include <assert.h>
+#include <unistd.h>
 #include "ServerCtrl.h"
 #include "slave.h"
 #include "../common/dbProtocol.h"
@@ -70,7 +71,6 @@ DBPacketHeader* ExchangePacket(enum CMD cmd, int key,
     RecvMsg(sockfd, szBuf);
     return (DBPacketHeader *)szBuf;
 }
-
 
 void AddNewSlave(int pos, SlaveNode sn)
 {
@@ -198,9 +198,10 @@ char* ExeShellCmd(const char *cmd, const char *srcdir, const char *srcfname,
 
 char *GetFileName(int k, char *filename)
 {
-    static char filepath[][MAX_FILENAME_LEN] = {
-        {"\0"}, {BACKUP1_DIR}, {BACKUP2_DIR}
-    };
+    static char filepath[3][MAX_FILENAME_LEN];
+    strcpy(filepath[0], "");
+    strcpy(filepath[1], BACKUP1_DIR);
+    strcpy(filepath[2], BACKUP2_DIR);
     if (k > 0)
         strcat(filepath[k], "//");
     strcat(filepath[k], filename);
@@ -397,6 +398,15 @@ void HandleMasterRequest()
                 }
                 break;
             }
+        case UPDATE_BACKUP12:
+            {
+                printf("\nUPDATE_BACKUP12\n");
+                BackupForOtherSlave(1);
+                BackupForOtherSlave(2);
+                hd.cmd = UPDATE_BACKUP12_R;
+                WriteHeader(szBuf, &hd);
+                SendMsg(master_sock, szBuf);
+            }
         default:
             {
             }
@@ -424,6 +434,7 @@ void ShutDownSlave(int a)
     exit(0);
 }
 
+
 int InitialSlave(char *master_addr, int master_port)
 {
     port = GetPort(listen_sock);
@@ -448,6 +459,7 @@ int InitialSlave(char *master_addr, int master_port)
         Notify2ndPreUpdateBackup2();
         BackupForOtherSlave(2);
     }
+
 
     return 0;
 }
