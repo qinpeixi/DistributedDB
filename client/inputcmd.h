@@ -15,6 +15,7 @@
 #define INPUTCMD_H
 
 int InputCmd();
+extern char *DBName;
 
 #endif
 

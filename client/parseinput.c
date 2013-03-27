@@ -18,6 +18,7 @@
 #include <assert.h>
 #include "parseinput.h"
 #include "../common/Database.h"
+#include "inputcmd.h"
 
 DataBase hdb = NULL;
 
@@ -120,7 +121,6 @@ int Parse(char *input)
         {
             if (hdb == NULL)
                 goto NODB;
-            extern char *DBName;
             res = DBDelete(hdb);
             hdb = NULL;
             DBName[0] = '\0';
